@@ -1,10 +1,12 @@
 // server.js - Full Backend API for Raasta Road Alert Platform
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { connectDB, getDB } = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -376,6 +378,28 @@ function saveDatabase(db) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
   } catch (e) {
     console.error('Failed to write database file:', e);
+  }
+
+  // Also sync to MongoDB Atlas when connected
+  const mongo = getDB();
+  if (mongo) {
+    (async () => {
+      try {
+        await mongo.collection('metadata').updateOne(
+          { _id: 'state' },
+          { $set: { cityConfig: db.cityConfig, apiSettings: db.apiSettings, updatedAt: new Date() } },
+          { upsert: true }
+        );
+        // Persist snapshots to Atlas
+        await mongo.collection('incidents_snapshot').replaceOne(
+          { _id: 'current' },
+          { _id: 'current', list: db.incidents, count: db.incidents.length, updatedAt: new Date() },
+          { upsert: true }
+        );
+      } catch (err) {
+        console.warn('MongoDB Atlas background sync notice:', err.message);
+      }
+    })();
   }
 }
 
@@ -858,11 +882,14 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`\n========================================`);
   console.log(`🚀 Raasta Mobility Platform is running!`);
   console.log(`📍 Launch City: ${db.cityConfig.name}, Karnataka`);
   console.log(`🌐 Server URL: http://localhost:${PORT}`);
   console.log(`🎨 Theme: Wine Burgundy (#5C0D1D) & Vanilla Cream (#FDF6E5)`);
   console.log(`========================================\n`);
+
+  // Connect to MongoDB Atlas
+  await connectDB();
 });
