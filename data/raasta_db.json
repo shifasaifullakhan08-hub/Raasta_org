@@ -1,0 +1,479 @@
+{
+  "cityConfig": {
+    "id": "belagavi",
+    "name": "Belagavi (Belgaum)",
+    "state": "Karnataka",
+    "country": "India",
+    "lat": 15.8497,
+    "lng": 74.4977,
+    "zoom": 13,
+    "boundaryName": "Belagavi City Corporation (BCC)"
+  },
+  "users": [
+    {
+      "id": "user_admin_001",
+      "name": "Chief Moderator",
+      "email": "admin@raasta.in",
+      "passwordHash": "$2b$08$T2HM0QA8Ih3/p76I0/F9GOAmNi9NVROO4wDcz8NcOwZIb.omK/UOm",
+      "role": "admin",
+      "createdAt": "2026-10-27T14:07:18.216Z",
+      "settings": {
+        "emailAlerts": true,
+        "browserPush": true,
+        "categories": [
+          "roadblock",
+          "maintenance",
+          "pothole",
+          "diversion",
+          "flooding"
+        ],
+        "minSeverity": "all"
+      },
+      "savedPlaces": [
+        {
+          "id": "sp-1",
+          "label": "Office (BCC HQ)",
+          "address": "Belagavi City Corporation, Subhash Nagar",
+          "lat": 15.8562,
+          "lng": 74.5091
+        },
+        {
+          "id": "sp-2",
+          "label": "Home (Tilakwadi)",
+          "address": "Tilakwadi 2nd Gate, Belagavi",
+          "lat": 15.8341,
+          "lng": 74.5056
+        }
+      ],
+      "savedRoutes": [
+        {
+          "id": "rt-1",
+          "title": "Daily Commute: Tilakwadi to Central Office",
+          "originLabel": "Tilakwadi 2nd Gate",
+          "originCoords": [
+            15.8341,
+            74.5056
+          ],
+          "destLabel": "BCC HQ (Subhash Nagar)",
+          "destCoords": [
+            15.8562,
+            74.5091
+          ],
+          "isFavorite": true,
+          "notify": true,
+          "typicalDuration": "14 mins",
+          "distanceKm": "4.2 km"
+        }
+      ]
+    },
+    {
+      "id": "user_demo_101",
+      "name": "Rahul Deshmukh",
+      "email": "rahul@example.com",
+      "passwordHash": "$2b$08$q8nON/k4sV13EoPMe1s9deaBs/2cq3dY1T3ak/1GCnb56/iyRLdTu",
+      "role": "user",
+      "createdAt": "2026-10-27T14:07:18.247Z",
+      "settings": {
+        "emailAlerts": true,
+        "browserPush": true,
+        "categories": [
+          "roadblock",
+          "maintenance",
+          "flooding"
+        ],
+        "minSeverity": "moderate"
+      },
+      "savedPlaces": [
+        {
+          "id": "sp-101",
+          "label": "Home",
+          "address": "Bhagya Nagar, Belagavi",
+          "lat": 15.8302,
+          "lng": 74.5123
+        },
+        {
+          "id": "sp-102",
+          "label": "College",
+          "address": "KLE Tech / VTU Campus, Belagavi",
+          "lat": 15.8891,
+          "lng": 74.5367
+        }
+      ],
+      "savedRoutes": [
+        {
+          "id": "rt-101",
+          "title": "College Route: Bhagya Nagar to VTU",
+          "originLabel": "Bhagya Nagar",
+          "originCoords": [
+            15.8302,
+            74.5123
+          ],
+          "destLabel": "VTU Campus (Machhe/Santi Bastwad)",
+          "destCoords": [
+            15.8891,
+            74.5367
+          ],
+          "isFavorite": true,
+          "notify": true,
+          "typicalDuration": "22 mins",
+          "distanceKm": "8.7 km"
+        }
+      ]
+    },
+    {
+      "id": "user_mvs8rgf0",
+      "name": "Shifa Khan",
+      "email": "skhan.bgm@gmail.com",
+      "passwordHash": "$2b$08$QB4hBNrcSN38vgcUbb9CAu1wXek27kadUCAUq4KxtP7pHXY.ceUz2",
+      "role": "user",
+      "createdAt": "2026-10-28T15:00:33.455Z",
+      "settings": {
+        "emailAlerts": true,
+        "browserPush": false,
+        "categories": [
+          "roadblock",
+          "maintenance",
+          "pothole",
+          "diversion",
+          "flooding"
+        ],
+        "minSeverity": "all"
+      },
+      "savedPlaces": [
+        {
+          "id": "sp-1793199633455",
+          "label": "Home",
+          "address": "Belagavi, Karnataka",
+          "lat": 15.8497,
+          "lng": 74.4977
+        }
+      ],
+      "savedRoutes": [
+        {
+          "id": "rt-mvs8sdzg",
+          "title": "Home to college",
+          "originLabel": "Hanuman Nagar",
+          "originCoords": [
+            15.8365,
+            74.5082
+          ],
+          "destLabel": "SGBIT college",
+          "destCoords": [
+            15.8891,
+            74.5367
+          ],
+          "isFavorite": false,
+          "notify": true,
+          "distanceKm": "Calculating...",
+          "typicalDuration": "Approx 15-20 min"
+        }
+      ]
+    }
+  ],
+  "incidents": [
+    {
+      "id": "inc-bgm-001",
+      "title": "Bridge Repair & Resurfacing",
+      "category": "roadblock",
+      "categoryLabel": "Roadblock & Closure",
+      "roadName": "Congress Road Railway Overbridge",
+      "landmark": "Near 3rd Railway Gate, Tilakwadi",
+      "description": "Complete closure of northbound carriageway due to joint slab replacement and resurfacing by BCC & Railways. Heavy vehicles diverted via 2nd Gate.",
+      "severity": "critical",
+      "verificationStatus": "Officially Confirmed",
+      "lat": 15.8365,
+      "lng": 74.5082,
+      "reportedBy": "Belagavi Traffic Police Notice #2026/04",
+      "reportedRole": "official",
+      "reportedAt": "2026-10-27T10:07:18.165Z",
+      "updatedAt": "2026-10-27T13:07:18.165Z",
+      "expectedEndTime": "Tomorrow, 08:00 PM",
+      "confirmations": {
+        "confirm": 48,
+        "stillHappening": 35,
+        "resolved": 2,
+        "inaccurate": 0
+      },
+      "voters": [
+        "user_demo_1",
+        "user_demo_2"
+      ],
+      "isDemo": true,
+      "officialSource": "Belagavi Traffic Police Advisory Dept",
+      "status": "active",
+      "history": [
+        {
+          "timestamp": "2026-10-27T10:07:18.165Z",
+          "action": "Reported by Belagavi Traffic Police",
+          "note": "Notice issued for bridge expansion joint fix"
+        },
+        {
+          "timestamp": "2026-10-27T13:07:18.165Z",
+          "action": "Verified & Confirmed",
+          "note": "Barricades deployed and signages active"
+        }
+      ]
+    },
+    {
+      "id": "inc-bgm-002",
+      "title": "Water Pipeline Trenching & Road Dug Up",
+      "category": "maintenance",
+      "categoryLabel": "Maintenance & Work",
+      "roadName": "Khanapur Road (Near RPD Cross)",
+      "landmark": "Between RPD College & Goaves circle",
+      "description": "KUWSDB 24x7 drinking water supply pipeline replacement work underway. Single-lane slow movement, loose gravel and dust present.",
+      "severity": "moderate",
+      "verificationStatus": "Verified",
+      "lat": 15.8398,
+      "lng": 74.5021,
+      "reportedBy": "Kiran Patil (Local Resident)",
+      "reportedRole": "citizen",
+      "reportedAt": "2026-10-27T02:07:18.165Z",
+      "updatedAt": "2026-10-27T11:07:18.165Z",
+      "expectedEndTime": "In 3 days",
+      "confirmations": {
+        "confirm": 32,
+        "stillHappening": 29,
+        "resolved": 1,
+        "inaccurate": 1
+      },
+      "voters": [
+        "user_demo_3"
+      ],
+      "isDemo": true,
+      "officialSource": "KUWSDB Project Engineer Notification",
+      "status": "active",
+      "history": [
+        {
+          "timestamp": "2026-10-27T02:07:18.165Z",
+          "action": "Submitted by Community",
+          "note": "Citizen reported deep trenching"
+        },
+        {
+          "timestamp": "2026-10-27T08:07:18.165Z",
+          "action": "Moderator Approved",
+          "note": "Site inspection confirmed by community ward monitor"
+        }
+      ]
+    },
+    {
+      "id": "inc-bgm-003",
+      "title": "Severe Deep Pothole Cluster after Rain",
+      "category": "pothole",
+      "categoryLabel": "Pothole & Damaged Road",
+      "roadName": "Mandoli Road",
+      "landmark": "Ahead of Peeranwadi cross, near bridge",
+      "description": "Cluster of deep crater-like potholes across both lanes. Risk of bike slippage and axle damage. Two-wheelers advised to take extreme caution.",
+      "severity": "moderate",
+      "verificationStatus": "Community Reported",
+      "lat": 15.8285,
+      "lng": 74.4754,
+      "reportedBy": "Ramesh K. (Delivery Partner)",
+      "reportedRole": "commuter",
+      "reportedAt": "2026-10-27T08:07:18.165Z",
+      "updatedAt": "2026-10-27T12:07:18.165Z",
+      "expectedEndTime": "Awaiting repair team",
+      "confirmations": {
+        "confirm": 19,
+        "stillHappening": 17,
+        "resolved": 0,
+        "inaccurate": 0
+      },
+      "voters": [],
+      "isDemo": true,
+      "status": "active",
+      "history": [
+        {
+          "timestamp": "2026-10-27T08:07:18.165Z",
+          "action": "Community Report logged",
+          "note": "Multiple riders flagged suspension damage risk"
+        }
+      ]
+    },
+    {
+      "id": "inc-bgm-004",
+      "title": "One-Way Traffic Diversion (Flyover Beam Work)",
+      "category": "diversion",
+      "categoryLabel": "Diversion & Traffic Change",
+      "roadName": "College Road to Rani Chennamma Circle",
+      "landmark": "Chennamma Circle junction approach",
+      "description": "Southbound traffic towards Bogarves diverted via Club Road and Ramdev Galli due to crane positioning for overhead illumination maintenance.",
+      "severity": "moderate",
+      "verificationStatus": "Verified",
+      "lat": 15.8596,
+      "lng": 74.5098,
+      "reportedBy": "North Zone Traffic Cell",
+      "reportedRole": "official",
+      "reportedAt": "2026-10-27T12:07:18.165Z",
+      "updatedAt": "2026-10-27T13:37:18.165Z",
+      "expectedEndTime": "Tonight 11:30 PM",
+      "confirmations": {
+        "confirm": 24,
+        "stillHappening": 20,
+        "resolved": 3,
+        "inaccurate": 0
+      },
+      "voters": [],
+      "isDemo": true,
+      "officialSource": "BCC Road Maintenance Wing",
+      "status": "active",
+      "history": [
+        {
+          "timestamp": "2026-10-27T12:07:18.165Z",
+          "action": "Diversion active",
+          "note": "Signboards placed at Bogarves cross"
+        }
+      ]
+    },
+    {
+      "id": "inc-bgm-005",
+      "title": "Stormwater Drain Overflow & Waterlogging",
+      "category": "flooding",
+      "categoryLabel": "Flooding & Waterlogging",
+      "roadName": "Sambra Airport Road (Old PB Road Cross)",
+      "landmark": "Near Gandhi Nagar underpass",
+      "description": "Underpass flooded with 1.5 ft water after thunderstorm. Sedans and compact cars stalled. Traffic diverted via Kanbargi bypass.",
+      "severity": "critical",
+      "verificationStatus": "Officially Confirmed",
+      "lat": 15.8712,
+      "lng": 74.5421,
+      "reportedBy": "Disaster Management Cell Belagavi",
+      "reportedRole": "official",
+      "reportedAt": "2026-10-27T11:07:18.165Z",
+      "updatedAt": "2026-10-27T13:07:18.165Z",
+      "expectedEndTime": "Pumps active; water receding",
+      "confirmations": {
+        "confirm": 41,
+        "stillHappening": 38,
+        "resolved": 5,
+        "inaccurate": 0
+      },
+      "voters": [],
+      "isDemo": true,
+      "officialSource": "Belagavi District Emergency Operations",
+      "status": "active",
+      "history": [
+        {
+          "timestamp": "2026-10-27T11:07:18.165Z",
+          "action": "Flooding recorded",
+          "note": "Emergency pump dispatched"
+        }
+      ]
+    },
+    {
+      "id": "inc-bgm-006",
+      "title": "Tar Asphalt Resurfacing Completed",
+      "category": "maintenance",
+      "categoryLabel": "Maintenance & Work",
+      "roadName": "Shukrawar Peth Road",
+      "landmark": "Near Central Bus Stand (CBT)",
+      "description": "Asphalt layering completed and lanes reopened to standard two-way traffic.",
+      "severity": "minor",
+      "verificationStatus": "Resolved",
+      "lat": 15.8542,
+      "lng": 74.5145,
+      "reportedBy": "Belagavi Ward 14 Engineer",
+      "reportedRole": "official",
+      "reportedAt": "2026-10-26T10:07:18.165Z",
+      "updatedAt": "2026-10-27T12:07:18.165Z",
+      "expectedEndTime": "Completed",
+      "confirmations": {
+        "confirm": 15,
+        "stillHappening": 1,
+        "resolved": 22,
+        "inaccurate": 0
+      },
+      "voters": [],
+      "isDemo": true,
+      "status": "resolved",
+      "history": [
+        {
+          "timestamp": "2026-10-26T10:07:18.165Z",
+          "action": "Work started",
+          "note": "Road resurfacing"
+        },
+        {
+          "timestamp": "2026-10-27T12:07:18.165Z",
+          "action": "Marked Resolved",
+          "note": "Lane reopened fully"
+        }
+      ]
+    },
+    {
+      "id": "inc-bgm-007",
+      "title": "Traffic Signal Re-synchronization Cleared",
+      "category": "diversion",
+      "categoryLabel": "Diversion & Traffic Change",
+      "roadName": "Bogarves to Camp Road Junction",
+      "landmark": "Near Kolhapur Circle",
+      "description": "Temporary traffic diversion lifted following smart traffic signal controller installation.",
+      "severity": "minor",
+      "verificationStatus": "Resolved",
+      "lat": 15.8512,
+      "lng": 74.502,
+      "reportedBy": "Belagavi Smart City Traffic Wing",
+      "reportedRole": "official",
+      "reportedAt": "2026-10-26T20:07:18.165Z",
+      "updatedAt": "2026-10-27T10:07:18.165Z",
+      "expectedEndTime": "Resolved & Active Flow",
+      "confirmations": {
+        "confirm": 12,
+        "stillHappening": 0,
+        "resolved": 19,
+        "inaccurate": 0
+      },
+      "voters": [],
+      "isDemo": true,
+      "status": "resolved",
+      "history": [
+        {
+          "timestamp": "2026-10-26T20:07:18.165Z",
+          "action": "Controller update",
+          "note": "Diversion initiated"
+        },
+        {
+          "timestamp": "2026-10-27T10:07:18.165Z",
+          "action": "Resolved",
+          "note": "Signals online"
+        }
+      ]
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "userId": "user_demo_101",
+      "title": "Roadblock Alert on your saved route",
+      "message": "Congress Road Railway Overbridge has closure on northbound lanes.",
+      "incidentId": "inc-bgm-001",
+      "severity": "critical",
+      "read": false,
+      "createdAt": "2026-10-27T13:37:18.247Z"
+    },
+    {
+      "id": "notif-2",
+      "userId": "user_demo_101",
+      "title": "Waterlogging near Sambra Rd",
+      "message": "Gandhi Nagar underpass reported 1.5 ft water.",
+      "incidentId": "inc-bgm-005",
+      "severity": "critical",
+      "read": true,
+      "createdAt": "2026-10-27T12:07:18.247Z"
+    }
+  ],
+  "moderationAudit": [
+    {
+      "id": "aud-1",
+      "incidentId": "inc-bgm-001",
+      "moderatorName": "Chief Moderator",
+      "action": "Verified Official Notice",
+      "reason": "Confirmed by Belagavi Traffic Police Gazette #2026/04",
+      "timestamp": "2026-10-27T11:07:18.247Z"
+    }
+  ],
+  "apiSettings": {
+    "googleMapsApiKey": "",
+    "demoMode": true,
+    "lastUpdated": "2026-10-27T14:07:18.247Z"
+  }
+}

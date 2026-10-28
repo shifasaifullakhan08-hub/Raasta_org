@@ -1,0 +1,226 @@
+/* Raasta Custom Styles & Design System */
+:root {
+  --color-burgundy: #5C0D1D;
+  --color-burgundy-dark: #3F0712;
+  --color-burgundy-light: #7E1529;
+  --color-cream: #FDF6E5;
+  --color-cream-soft: #F9F0D8;
+  --color-cream-card: #FFFDF9;
+  --color-teal: #0D9488;
+  --color-amber: #F59E0B;
+  --color-red: #E11D48;
+  --color-slate: #1E293B;
+  --color-slate-light: #64748B;
+  --color-border: #EADBCE;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--color-cream);
+  color: var(--color-slate);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-cream-soft);
+}
+::-webkit-scrollbar-thumb {
+  background: #D9C3AD;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-burgundy);
+}
+
+/* Header & Navigation */
+.raasta-nav {
+  background-color: var(--color-burgundy);
+  color: var(--color-cream);
+  box-shadow: 0 4px 20px rgba(92, 13, 29, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.brand-badge {
+  background: linear-gradient(135deg, #7E1529 0%, #5C0D1D 100%);
+  border: 1px solid rgba(253, 246, 229, 0.2);
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-burgundy);
+  color: var(--color-cream);
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.625rem;
+  border: 1px solid var(--color-burgundy-light);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(92, 13, 29, 0.2);
+}
+.btn-primary:hover {
+  background-color: var(--color-burgundy-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(92, 13, 29, 0.3);
+}
+
+.btn-secondary {
+  background-color: var(--color-cream-card);
+  color: var(--color-burgundy);
+  border: 1.5px solid var(--color-border);
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.625rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  border-color: var(--color-burgundy);
+  background-color: #FFF;
+}
+
+.btn-outline-burgundy {
+  border: 1.5px solid var(--color-burgundy);
+  color: var(--color-burgundy);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-outline-burgundy:hover {
+  background-color: var(--color-burgundy);
+  color: var(--color-cream);
+}
+
+/* Card Styling */
+.raasta-card {
+  background: var(--color-cream-card);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(92, 13, 29, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.raasta-card:hover {
+  box-shadow: 0 8px 24px rgba(92, 13, 29, 0.08);
+}
+
+/* Leaflet Map Overrides */
+.leaflet-container {
+  font-family: inherit;
+  border-radius: 0.875rem;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--color-cream-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(92, 13, 29, 0.15);
+}
+
+.custom-map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: bold;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+  animation: pulse-pin 2s infinite;
+}
+
+@keyframes pulse-pin {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Severity Badges */
+.badge-critical {
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+.badge-moderate {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+.badge-minor {
+  background-color: #E0E7FF;
+  color: #3730A3;
+  border: 1px solid #C7D2FE;
+}
+.badge-safe {
+  background-color: #CCFBF1;
+  color: #115E59;
+  border: 1px solid #99F6E4;
+}
+
+/* Verification Badges */
+.verify-official {
+  background-color: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+}
+.verify-verified {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+  border: 1px solid #93C5FD;
+}
+.verify-community {
+  background-color: #F3E8FF;
+  color: #6B21A8;
+  border: 1px solid #D8B4FE;
+}
+.verify-resolved {
+  background-color: #F1F5F9;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+}
+
+/* Tab indicator */
+.tab-active {
+  background-color: var(--color-burgundy);
+  color: var(--color-cream);
+  font-weight: 600;
+}
+.tab-inactive {
+  background-color: transparent;
+  color: var(--color-slate-light);
+}
+.tab-inactive:hover {
+  color: var(--color-burgundy);
+  background-color: rgba(92, 13, 29, 0.05);
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  background: rgba(40, 5, 12, 0.6);
+  backdrop-filter: blur(4px);
+}

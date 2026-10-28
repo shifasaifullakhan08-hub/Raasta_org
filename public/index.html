@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raasta — Know the road before you go | Road Conditions & Alerts (Belagavi)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind Play CDN for immediate responsive utilities -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            burgundy: {
+              DEFAULT: '#5C0D1D',
+              dark: '#3F0712',
+              light: '#7E1529',
+              hover: '#6E1023'
+            },
+            cream: {
+              DEFAULT: '#FDF6E5',
+              soft: '#F9F0D8',
+              card: '#FFFDF9',
+              border: '#EADBCE'
+            },
+            teal: {
+              DEFAULT: '#0D9488',
+              light: '#CCFBF1'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet CSS & JS for Interactive Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-[#FDF6E5] text-slate-800 antialiased flex flex-col min-h-screen">
+
+  <!-- Top Announcement / City Bar -->
+  <div class="bg-[#3F0712] text-[#FDF6E5] text-xs py-1.5 px-4 flex justify-between items-center border-b border-[#5C0D1D]">
+    <div class="flex items-center gap-2 max-w-7xl mx-auto w-full">
+      <span class="inline-flex items-center gap-1 bg-[#5C0D1D] px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide uppercase border border-[#7E1529]">
+        <i data-lucide="map-pin" class="w-3 h-3 text-amber-400"></i> Active City: <span id="nav-active-city-label">Belagavi, Karnataka</span>
+      </span>
+      <span class="hidden sm:inline text-cream-soft opacity-80 text-[11px]">• Real-time municipal maintenance, potholes, and roadblock tracker</span>
+      <div class="ml-auto flex items-center gap-3">
+        <button onclick="window.raastaApp.openApiModal()" class="text-xs hover:text-amber-300 flex items-center gap-1 transition">
+          <i data-lucide="key" class="w-3 h-3"></i> <span class="hidden md:inline">Google Maps Key / Settings</span>
+        </button>
+        <span class="opacity-40">|</span>
+        <button onclick="window.raastaApp.switchView('admin')" id="admin-quick-link" class="text-xs hover:text-amber-300 flex items-center gap-1 transition">
+          <i data-lucide="shield-alert" class="w-3 h-3"></i> Admin Portal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='10' fill='%23F59E0B'/><path d='M20 7C14.48 7 10 11.48 10 17C10 24.2 20 31.5 20 31.5C20 31.5 30 24.2 30 17C30 11.48 25.52 7 20 7Z' fill='%235C0D1D'/><circle cx='20' cy='35' r='2' fill='%235C0D1D'/></svg>">
+
+  <!-- Primary Navigation Bar -->
+  <header class="raasta-nav py-3 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" onclick="window.raastaApp.switchView('landing')" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-[#F59E0B] flex items-center justify-center shadow-md p-1 group-hover:scale-105 transition">
+          <svg viewBox="0 0 40 40" fill="none" class="w-full h-full">
+            <rect width="40" height="40" rx="10" fill="#F59E0B"/>
+            <path d="M20 7C14.48 7 10 11.48 10 17C10 24.2 20 31.5 20 31.5C20 31.5 30 24.2 30 17C30 11.48 25.52 7 20 7Z" fill="#5C0D1D"/>
+            <!-- Dot/period at the bottom tip of pin drop -->
+            <circle cx="20" cy="35" r="2.2" fill="#5C0D1D"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-2xl font-extrabold tracking-tight text-[#FDF6E5] flex items-center gap-1.5">
+            RAASTA <span class="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 bg-[#7E1529] rounded text-amber-300">Live</span>
+          </span>
+          <p class="text-[10px] text-cream-soft opacity-85 font-medium -mt-1 hidden sm:block">Know the road before you go</p>
+        </div>
+      </a>
+
+      <!-- Navigation Links -->
+      <nav class="hidden lg:flex items-center gap-1 text-sm font-medium">
+        <button onclick="window.raastaApp.switchView('landing')" class="nav-item px-3 py-2 rounded-lg hover:bg-[#7E1529] text-[#FDF6E5] transition" data-view="landing">Home</button>
+        <button onclick="window.raastaApp.switchView('map')" class="nav-item px-3 py-2 rounded-lg hover:bg-[#7E1529] text-[#FDF6E5] transition flex items-center gap-1.5" data-view="map">
+          <i data-lucide="map" class="w-4 h-4 text-amber-300"></i> Live Map
+        </button>
+        <button onclick="window.raastaApp.switchView('route-checker')" class="nav-item px-3 py-2 rounded-lg hover:bg-[#7E1529] text-[#FDF6E5] transition flex items-center gap-1.5" data-view="route-checker">
+          <i data-lucide="navigation" class="w-4 h-4"></i> Check Route
+        </button>
+        <button onclick="window.raastaApp.switchView('alerts')" class="nav-item px-3 py-2 rounded-lg hover:bg-[#7E1529] text-[#FDF6E5] transition flex items-center gap-1.5" data-view="alerts">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i> Road Alerts
+        </button>
+        <button onclick="window.raastaApp.switchView('report')" class="nav-item px-3 py-2 rounded-lg bg-[#7E1529] text-[#FDF6E5] hover:bg-[#3F0712] transition flex items-center gap-1.5 border border-[#991B1B]" data-view="report">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-amber-300"></i> Report Issue
+        </button>
+        <button onclick="window.raastaApp.switchView('how-it-works')" class="nav-item px-3 py-2 rounded-lg hover:bg-[#7E1529] text-[#FDF6E5] transition" data-view="how-it-works">How It Works</button>
+      </nav>
+
+      <!-- User / Auth Actions -->
+      <div class="flex items-center gap-2">
+        <div id="auth-logged-out" class="flex items-center gap-2">
+          <button onclick="window.raastaApp.openAuthModal('login')" class="text-sm font-semibold text-[#FDF6E5] hover:text-amber-200 px-3 py-1.5 transition">
+            Log In
+          </button>
+          <button onclick="window.raastaApp.openAuthModal('signup')" class="text-sm font-semibold bg-amber-400 text-[#3F0712] hover:bg-amber-300 px-3.5 py-1.5 rounded-lg shadow transition flex items-center gap-1">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Sign Up
+          </button>
+        </div>
+
+        <div id="auth-logged-in" class="hidden flex items-center gap-2">
+          <!-- Notification Bell -->
+          <div class="relative">
+            <button onclick="window.raastaApp.toggleNotifDropdown()" class="p-2 rounded-full hover:bg-[#7E1529] text-[#FDF6E5] relative transition">
+              <i data-lucide="bell" class="w-5 h-5"></i>
+              <span id="notif-badge" class="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-400 rounded-full ring-2 ring-[#5C0D1D]"></span>
+            </button>
+            <!-- Dropdown -->
+            <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-cream-border z-50 overflow-hidden text-slate-800">
+              <div class="p-3 bg-burgundy text-[#FDF6E5] flex justify-between items-center text-xs font-semibold">
+                <span>Personalized Road Notifications</span>
+                <button onclick="window.raastaApp.markAllNotifsRead()" class="hover:text-amber-300 text-[11px] underline">Mark all read</button>
+              </div>
+              <div id="notif-list-container" class="max-h-72 overflow-y-auto divide-y divide-slate-100 text-xs">
+                <!-- populated by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- User Profile Menu -->
+          <button onclick="window.raastaApp.switchView('dashboard')" class="flex items-center gap-2 px-3 py-1.5 bg-[#7E1529] hover:bg-[#3F0712] rounded-lg transition border border-red-900/50">
+            <div class="w-6 h-6 rounded-full bg-amber-400 text-[#5C0D1D] font-bold text-xs flex items-center justify-center">
+              <span id="user-avatar-initial">U</span>
+            </div>
+            <span id="user-display-name" class="text-xs font-semibold text-[#FDF6E5] hidden sm:inline">Rahul</span>
+          </button>
+          
+          <button onclick="window.raastaApp.logout()" title="Logout" class="p-2 rounded-lg hover:bg-red-900/50 text-[#FDF6E5] text-xs transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Mobile Menu Hamburger -->
+        <button onclick="window.raastaApp.toggleMobileMenu()" class="lg:hidden p-2 rounded-lg text-[#FDF6E5] hover:bg-[#7E1529]">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Navigation -->
+    <div id="mobile-nav-menu" class="hidden lg:hidden mt-3 pt-3 border-t border-[#7E1529] space-y-1">
+      <button onclick="window.raastaApp.switchView('landing')" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-[#FDF6E5] hover:bg-[#7E1529]">Home</button>
+      <button onclick="window.raastaApp.switchView('map')" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-[#FDF6E5] hover:bg-[#7E1529] flex items-center gap-2">
+        <i data-lucide="map" class="w-4 h-4 text-amber-300"></i> Live Interactive Map
+      </button>
+      <button onclick="window.raastaApp.switchView('route-checker')" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-[#FDF6E5] hover:bg-[#7E1529] flex items-center gap-2">
+        <i data-lucide="navigation" class="w-4 h-4"></i> Check Journey Route
+      </button>
+      <button onclick="window.raastaApp.switchView('alerts')" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-[#FDF6E5] hover:bg-[#7E1529] flex items-center gap-2">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i> Road Alerts Feed
+      </button>
+      <button onclick="window.raastaApp.switchView('report')" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-[#FDF6E5] hover:bg-[#7E1529] flex items-center gap-2">
+        <i data-lucide="plus-circle" class="w-4 h-4 text-amber-300"></i> Report an Issue
+      </button>
+      <button onclick="window.raastaApp.switchView('dashboard')" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-[#FDF6E5] hover:bg-[#7E1529]">My Dashboard & Routes</button>
+      <button onclick="window.raastaApp.switchView('how-it-works')" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-[#FDF6E5] hover:bg-[#7E1529]">How Raasta Works</button>
+      <button onclick="window.raastaApp.switchView('admin')" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-amber-300 hover:bg-[#7E1529] flex items-center gap-2">
+        <i data-lucide="shield" class="w-4 h-4"></i> Admin & Moderation
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT CONTAINERS ==================== -->
+  <main class="flex-grow flex flex-col">
+
+    <!-- 1. LANDING PAGE VIEW -->
+    <section id="view-landing" class="view-panel block">
+      
+      <!-- Hero Section -->
+      <div class="relative overflow-hidden bg-gradient-to-b from-[#5C0D1D] to-[#3F0712] text-[#FDF6E5] py-14 sm:py-20 px-4 sm:px-6">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          
+          <div class="lg:col-span-7 space-y-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7E1529] border border-amber-400/30 text-amber-300 text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live City Coverage: Belagavi, Karnataka
+            </div>
+            
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-[#FDF6E5]">
+              Know the road <br><span class="text-amber-400 underline decoration-amber-400/40">before you go.</span>
+            </h1>
+            
+            <p class="text-base sm:text-lg text-cream-soft opacity-90 max-w-2xl leading-relaxed">
+              Roadblocks, pipeline maintenance, deep potholes, and sudden waterlogging can waste precious hours. Raasta gives you proactive, community-verified road alerts and smart alternative routes before you leave your doorstep.
+            </p>
+
+            <!-- Search Quick Check in Hero -->
+            <div class="bg-white/10 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/20 shadow-2xl space-y-3 max-w-xl">
+              <div class="flex flex-col sm:flex-row gap-2">
+                <div class="flex-1 relative flex items-center">
+                  <i data-lucide="map-pin" class="w-4 h-4 absolute left-3 text-amber-400"></i>
+                  <input type="text" id="hero-origin" list="belagavi-places-list" placeholder="From: e.g. Tilakwadi / Kumarswamy Layout" value="Tilakwadi 3rd Gate, Belagavi" class="w-full pl-9 pr-9 py-2 bg-white text-slate-800 text-sm rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-amber-400">
+                  <button type="button" onclick="window.raastaApp.openPinPickerModal('hero-origin')" title="Drop Pin on Map" class="absolute right-2 p-1.5 text-slate-400 hover:text-burgundy bg-slate-100 hover:bg-amber-100 rounded-lg transition">
+                    <i data-lucide="crosshair" class="w-4 h-4 text-burgundy"></i>
+                  </button>
+                </div>
+                <div class="flex-1 relative flex items-center">
+                  <i data-lucide="navigation" class="w-4 h-4 absolute left-3 text-amber-400"></i>
+                  <input type="text" id="hero-dest" list="belagavi-places-list" placeholder="To: e.g. Sambra Airport / VTU" value="VTU Campus, Machhe" class="w-full pl-9 pr-9 py-2 bg-white text-slate-800 text-sm rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-amber-400">
+                  <button type="button" onclick="window.raastaApp.openPinPickerModal('hero-dest')" title="Drop Pin on Map" class="absolute right-2 p-1.5 text-slate-400 hover:text-burgundy bg-slate-100 hover:bg-amber-100 rounded-lg transition">
+                    <i data-lucide="crosshair" class="w-4 h-4 text-burgundy"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Belagavi District & Surroundings Places Datalist -->
+              <datalist id="belagavi-places-list">
+                <option value="Tilakwadi 3rd Gate, Belagavi">
+                <option value="Tilakwadi 2nd Gate, Belagavi">
+                <option value="Tilakwadi 1st Gate, Belagavi">
+                <option value="RPD College Cross, Tilakwadi">
+                <option value="Kumarswamy Layout, Belagavi">
+                <option value="Bhagya Nagar, Belagavi">
+                <option value="Angol Main Road, Belagavi">
+                <option value="Rani Chennamma Circle, Belagavi">
+                <option value="Bogarves Junction, Belagavi">
+                <option value="Goaves Circle, Belagavi">
+                <option value="Camp Area / Cantonment, Belagavi">
+                <option value="Club Road, Belagavi">
+                <option value="College Road, Belagavi">
+                <option value="Central Bus Stand (CBT), Belagavi">
+                <option value="Belagavi Railway Station (SWR)">
+                <option value="Subhash Nagar / BCC HQ, Belagavi">
+                <option value="Shahu Nagar, Belagavi">
+                <option value="Nehru Nagar, Belagavi">
+                <option value="KLE Tech / JNMC Campus, Belagavi">
+                <option value="VTU Campus, Machhe, Belagavi">
+                <option value="Peeranwadi Cross, Belagavi">
+                <option value="Mandoli Road, Belagavi">
+                <option value="Udyambag Industrial Estate, Belagavi">
+                <option value="Macche Industrial Area, Belagavi">
+                <option value="Sambra Belagavi Airport Road">
+                <option value="Kanbargi Bypass, Belagavi">
+                <option value="Kakati Industrial Area, Belagavi">
+                <option value="Honaga Industrial Area, Belagavi">
+                <option value="Hindalga Ganapati Temple Road">
+                <option value="Vadgaon, Belagavi">
+                <option value="Shahapur, Belagavi">
+                <option value="Khasbag, Belagavi">
+                <option value="Mahantesh Nagar, Belagavi">
+                <option value="Shivaji Nagar, Belagavi">
+                <option value="Ramteerth Nagar, Belagavi">
+                <option value="Auto Nagar, Belagavi">
+                <option value="Sujata Hotel Cross / Khade Bazar">
+                <option value="Ganpat Galli, Belagavi">
+                <option value="Fort Lake / Belagavi Kote Kere">
+                <option value="Belagavi Military Mahadev Temple">
+                <option value="Khanapur Town, Belagavi District">
+                <option value="Bailhongal, Belagavi District">
+                <option value="Gokak Falls Road, Belagavi District">
+                <option value="Chikkodi, Belagavi District">
+                <option value="Sankeshwar, Belagavi District">
+                <option value="Nippani, Belagavi District">
+                <option value="Kittur Fort Road, Belagavi District">
+                <option value="Hukkeri, Belagavi District">
+                <option value="Athani, Belagavi District">
+                <option value="Raibag, Belagavi District">
+                <option value="Ramdurg, Belagavi District">
+                <option value="Saundatti Yellamma, Belagavi District">
+              </datalist>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="window.raastaApp.checkHeroRoute()" class="btn-primary flex-1 justify-center bg-amber-400 !text-[#3F0712] hover:bg-amber-300 font-bold border-none shadow-lg">
+                  <i data-lucide="search" class="w-4 h-4"></i> Check Journey Disruptions
+                </button>
+                <button onclick="window.raastaApp.switchView('map')" class="btn-secondary !bg-white/15 !text-[#FDF6E5] !border-white/30 hover:!bg-white/25">
+                  <i data-lucide="map" class="w-4 h-4 text-amber-300"></i> Explore Live Map
+                </button>
+              </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/10 max-w-lg">
+              <div>
+                <p class="text-2xl font-black text-amber-400" id="stat-active-count">5</p>
+                <p class="text-xs text-cream-soft opacity-80">Active Disruptions</p>
+              </div>
+              <div>
+                <p class="text-2xl font-black text-emerald-400">100%</p>
+                <p class="text-xs text-cream-soft opacity-80">Belagavi Key Arteries</p>
+              </div>
+              <div>
+                <p class="text-2xl font-black text-amber-300">Free</p>
+                <p class="text-xs text-cream-soft opacity-80">Community & Public</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Hero Graphic / Map Snapshot -->
+          <div class="lg:col-span-5 relative">
+            <div class="raasta-card p-4 !bg-[#FFFDF9] border-2 border-amber-300/60 shadow-2xl">
+              <div class="flex items-center justify-between pb-3 border-b border-cream-border">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-red-500 animate-ping"></span>
+                  <span class="text-xs font-bold text-burgundy uppercase tracking-wider">Live Belagavi Incident Radar</span>
+                </div>
+                <span class="text-[11px] bg-red-100 text-red-800 font-semibold px-2 py-0.5 rounded">High Severity Notice</span>
+              </div>
+
+              <!-- Miniature Preview Card -->
+              <div class="mt-3 space-y-3">
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                  <div class="p-2 bg-red-600 text-white rounded-lg">
+                    <i data-lucide="barrier" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-bold text-red-900">Congress Road Railway Overbridge</h4>
+                    <p class="text-[11px] text-red-700 mt-0.5">Northbound carriageway closed for joint replacement. Diversion via 2nd Gate.</p>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="text-[10px] font-bold text-white bg-red-700 px-1.5 py-0.5 rounded">Officially Confirmed</span>
+                      <span class="text-[10px] text-slate-500">48 Confirmations</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+                  <div class="p-2 bg-amber-500 text-white rounded-lg">
+                    <i data-lucide="wrench" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-bold text-amber-900">Khanapur Road (Near RPD Cross)</h4>
+                    <p class="text-[11px] text-amber-800 mt-0.5">24x7 drinking water supply pipeline trenching. Slow single-lane crawl.</p>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="text-[10px] font-bold text-blue-800 bg-blue-100 px-1.5 py-0.5 rounded">Verified</span>
+                      <span class="text-[10px] text-slate-500">32 Citizens Confirmed</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="window.raastaApp.switchView('map')" class="w-full mt-4 py-2.5 bg-burgundy hover:bg-burgundy-light text-cream font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="map-pinned" class="w-4 h-4 text-amber-300"></i> Open Live Interactive Map
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Feature Highlights -->
+      <div class="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto space-y-3">
+          <h2 class="text-xs font-bold text-burgundy tracking-widest uppercase">Why Commuters Trust Raasta</h2>
+          <h3 class="text-3xl font-extrabold text-slate-900">Everything you need to avoid wasted commute hours</h3>
+          <p class="text-sm text-slate-600">Built for citizens, daily commuters, college students, office travelers, and emergency vehicles in Belagavi.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+          
+          <div class="raasta-card p-6 space-y-3 hover:-translate-y-1 transition border-t-4 border-t-burgundy">
+            <div class="w-10 h-10 rounded-xl bg-red-100 text-burgundy flex items-center justify-center">
+              <i data-lucide="barrier" class="w-5 h-5"></i>
+            </div>
+            <h4 class="text-base font-bold text-slate-900">Roadblocks & Closures</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">Know about bridge maintenance, VIP movements, and structural barricades before reaching the bottleneck.</p>
+          </div>
+
+          <div class="raasta-card p-6 space-y-3 hover:-translate-y-1 transition border-t-4 border-t-amber-500">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+              <i data-lucide="cone" class="w-5 h-5"></i>
+            </div>
+            <h4 class="text-base font-bold text-slate-900">Maintenance & Works</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">KUWSDB water pipelines, electrical cable laying, and smart city asphalt works tracked with scheduled durations.</p>
+          </div>
+
+          <div class="raasta-card p-6 space-y-3 hover:-translate-y-1 transition border-t-4 border-t-teal">
+            <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center">
+              <i data-lucide="users" class="w-5 h-5"></i>
+            </div>
+            <h4 class="text-base font-bold text-slate-900">Community Verified</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">Commuters on the spot vote "Still Happening" or "Resolved" with anti-abuse controls, avoiding obsolete alerts.</p>
+          </div>
+
+          <div class="raasta-card p-6 space-y-3 hover:-translate-y-1 transition border-t-4 border-t-blue-600">
+            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center">
+              <i data-lucide="split" class="w-5 h-5"></i>
+            </div>
+            <h4 class="text-base font-bold text-slate-900">Alternative Paths</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">Discovered an issue on your route? Raasta instantly suggests detours via parallel city arterials.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 3-Step "How It Works" Section -->
+      <div class="bg-[#F9F0D8] py-16 px-4 sm:px-6 border-y border-cream-border">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center max-w-xl mx-auto space-y-2 mb-12">
+            <h2 class="text-xs font-bold text-burgundy tracking-widest uppercase">Simple & Transparent</h2>
+            <h3 class="text-3xl font-extrabold text-slate-900">How Raasta Keeps You Ahead</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="raasta-card p-6 text-center space-y-3 relative">
+              <div class="w-12 h-12 rounded-2xl bg-burgundy text-amber-300 font-extrabold text-lg flex items-center justify-center mx-auto shadow-md">
+                1
+              </div>
+              <h4 class="text-base font-bold text-slate-900">Set Your Route or Destination</h4>
+              <p class="text-xs text-slate-600">Save frequently travelled daily routes (e.g. Tilakwadi to KLE Tech or Camp to Sambra) or quickly check a one-time journey.</p>
+            </div>
+
+            <div class="raasta-card p-6 text-center space-y-3 relative">
+              <div class="w-12 h-12 rounded-2xl bg-burgundy text-amber-300 font-extrabold text-lg flex items-center justify-center mx-auto shadow-md">
+                2
+              </div>
+              <h4 class="text-base font-bold text-slate-900">Discover Active Road Hazards</h4>
+              <p class="text-xs text-slate-600">Our engine scans active municipal notices and verified citizen observations intersecting your travel path.</p>
+            </div>
+
+            <div class="raasta-card p-6 text-center space-y-3 relative">
+              <div class="w-12 h-12 rounded-2xl bg-burgundy text-amber-300 font-extrabold text-lg flex items-center justify-center mx-auto shadow-md">
+                3
+              </div>
+              <h4 class="text-base font-bold text-slate-900">Take an Alternative Route</h4>
+              <p class="text-xs text-slate-600">Review clear detour advisories, bypass congested maintenance zones, and arrive safely without unexpected delays.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust & Transparency -->
+      <div class="py-16 px-4 sm:px-6 max-w-5xl mx-auto text-center space-y-6">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Clear Verification & Evidence Model</h3>
+        <p class="text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
+          Raasta strictly separates verified municipal notices, moderator-inspected reports, and community reports. We never label simulated demo incidents as live data, ensuring 100% transparency.
+        </p>
+        <div class="flex flex-wrap justify-center gap-3 pt-2">
+          <span class="verify-official px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5">
+            <i data-lucide="check-check" class="w-3.5 h-3.5"></i> Officially Confirmed
+          </span>
+          <span class="verify-verified px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5">
+            <i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Moderator Verified
+          </span>
+          <span class="verify-community px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i> Community Reported
+          </span>
+          <span class="verify-resolved px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5">
+            <i data-lucide="circle-slash" class="w-3.5 h-3.5"></i> Resolved & Cleared
+          </span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 2. INTERACTIVE ROAD MAP VIEW -->
+    <section id="view-map" class="view-panel hidden flex-1 flex flex-col">
+      <div class="bg-white border-b border-cream-border px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-3">
+          <h2 class="text-base font-extrabold text-burgundy flex items-center gap-2">
+            <i data-lucide="map" class="w-5 h-5 text-amber-500"></i> Belagavi Live Condition Radar
+          </h2>
+          <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-medium" id="map-incident-count">Loading...</span>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <select id="map-filter-category" onchange="window.raastaApp.applyMapFilters()" class="px-2.5 py-1.5 border border-slate-300 rounded-lg bg-cream font-medium text-slate-800">
+            <option value="all">All Categories</option>
+            <option value="roadblock">Roadblocks & Closures</option>
+            <option value="maintenance">Maintenance & Works</option>
+            <option value="pothole">Potholes & Damage</option>
+            <option value="diversion">Diversions & One-Ways</option>
+            <option value="flooding">Flooding & Waterlogging</option>
+          </select>
+
+          <select id="map-filter-severity" onchange="window.raastaApp.applyMapFilters()" class="px-2.5 py-1.5 border border-slate-300 rounded-lg bg-cream font-medium text-slate-800">
+            <option value="all">All Severities</option>
+            <option value="critical">Critical Only</option>
+            <option value="moderate">Moderate</option>
+            <option value="minor">Minor</option>
+          </select>
+
+          <button onclick="window.raastaApp.resetMapFilters()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition font-medium">
+            Reset
+          </button>
+
+          <button onclick="window.raastaApp.switchView('report')" class="btn-primary !py-1.5 !px-3 !text-xs !bg-burgundy">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Report Spot
+          </button>
+        </div>
+      </div>
+
+      <!-- Map + Sidebar Grid -->
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden min-h-[550px] relative">
+        
+        <!-- Interactive Leaflet Map Container -->
+        <div class="lg:col-span-8 xl:col-span-9 h-full min-h-[450px] relative">
+          <div id="leaflet-map" class="w-full h-full min-h-[450px]"></div>
+          
+          <!-- Floating Legend -->
+          <div class="absolute bottom-4 left-4 z-[999] bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-xl border border-cream-border text-xs space-y-1.5 hidden sm:block">
+            <p class="font-bold text-burgundy text-[11px] uppercase tracking-wider">Map Legend</p>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-red-600"></span> <span>Roadblock / Closure</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-amber-500"></span> <span>Maintenance / Repair</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-orange-600"></span> <span>Severe Pothole Cluster</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-purple-600"></span> <span>Traffic Diversion</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-blue-600"></span> <span>Flooding / Waterlogging</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Incident Feed & Details Panel -->
+        <div class="lg:col-span-4 xl:col-span-3 bg-[#FFFDF9] border-l border-cream-border flex flex-col h-full overflow-hidden">
+          <div class="p-3 bg-burgundy text-cream flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider">Belagavi Incidents</span>
+            <button onclick="window.raastaApp.loadIncidents()" title="Refresh" class="hover:text-amber-300">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          
+          <div id="map-incident-list" class="flex-1 overflow-y-auto divide-y divide-cream-border p-2 space-y-2">
+            <!-- Dynamically populated incident cards -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. CHECK ANY ROUTE VIEW -->
+    <section id="view-route-checker" class="view-panel hidden py-8 px-4 sm:px-6 max-w-7xl mx-auto w-full">
+      <div class="max-w-3xl mx-auto space-y-6">
+        
+        <div class="text-center space-y-2">
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Check Any Journey in Belagavi</h2>
+          <p class="text-sm text-slate-600">Inspect planned routes against live roadblocks, repair works, and waterlogging before you step into your vehicle.</p>
+        </div>
+
+        <!-- Route Form Card -->
+        <div class="raasta-card p-6 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-burgundy uppercase mb-1">Starting Point (Origin)</label>
+              <div class="relative flex items-center">
+                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600 absolute left-3"></i>
+                <input type="text" id="route-input-origin" list="belagavi-places-list" value="Tilakwadi 3rd Gate, Belagavi" placeholder="Type or select Belagavi place..." class="w-full pl-9 pr-9 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-burgundy font-medium bg-cream">
+                <button type="button" onclick="window.raastaApp.openPinPickerModal('route-input-origin')" title="Drop Pin on Map" class="absolute right-2 p-1.5 text-slate-400 hover:text-burgundy bg-white hover:bg-amber-100 rounded-lg transition border border-slate-200">
+                  <i data-lucide="crosshair" class="w-4 h-4 text-burgundy"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-burgundy uppercase mb-1">Destination</label>
+              <div class="relative flex items-center">
+                <i data-lucide="navigation" class="w-4 h-4 text-burgundy absolute left-3"></i>
+                <input type="text" id="route-input-dest" list="belagavi-places-list" value="VTU Campus / Belagavi Airport Road" placeholder="Type or select Belagavi place..." class="w-full pl-9 pr-9 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-burgundy font-medium bg-cream">
+                <button type="button" onclick="window.raastaApp.openPinPickerModal('route-input-dest')" title="Drop Pin on Map" class="absolute right-2 p-1.5 text-slate-400 hover:text-burgundy bg-white hover:bg-amber-100 rounded-lg transition border border-slate-200">
+                  <i data-lucide="crosshair" class="w-4 h-4 text-burgundy"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="flex flex-wrap items-center gap-2 pt-1 text-xs">
+            <span class="text-slate-500 font-semibold">Belagavi Popular Commutes:</span>
+            <button onclick="window.raastaApp.setRoutePreset('Tilakwadi', 'Rani Chennamma Circle')" class="px-2 py-1 bg-cream-soft hover:bg-cream border border-cream-border rounded text-burgundy font-medium">Tilakwadi → Chennamma Circle</button>
+            <button onclick="window.raastaApp.setRoutePreset('Bogarves', 'Sambra Airport Road')" class="px-2 py-1 bg-cream-soft hover:bg-cream border border-cream-border rounded text-burgundy font-medium">Bogarves → Sambra Airport</button>
+            <button onclick="window.raastaApp.setRoutePreset('Camp Area', 'Peeranwadi / Mandoli')" class="px-2 py-1 bg-cream-soft hover:bg-cream border border-cream-border rounded text-burgundy font-medium">Camp → Mandoli Road</button>
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button onclick="window.raastaApp.executeRouteCheck()" class="btn-primary flex-1 justify-center !py-3">
+              <i data-lucide="compass" class="w-4 h-4"></i> Check Road Conditions on Route
+            </button>
+            <button onclick="window.raastaApp.saveCurrentRoutePrompt()" class="btn-secondary !py-3" title="Save to My Routes">
+              <i data-lucide="bookmark-plus" class="w-4 h-4 text-burgundy"></i> Save Route
+            </button>
+          </div>
+        </div>
+
+        <!-- Route Results Panel -->
+        <div id="route-check-results" class="hidden space-y-4">
+          <!-- Populated by JS -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. ROAD ALERTS BROWSE VIEW -->
+    <section id="view-alerts" class="view-panel hidden py-8 px-4 sm:px-6 max-w-7xl mx-auto w-full">
+      <div class="space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-border pb-4">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900">Belagavi Road Alerts Directory</h2>
+            <p class="text-xs text-slate-600 mt-1">Real-time alerts submitted by citizens, road engineers, and traffic authorities.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="window.raastaApp.switchView('report')" class="btn-primary !text-xs">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Submit New Report
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar with Category, Status (Resolved/Unresolved) and Severity -->
+        <div class="raasta-card p-4 space-y-3">
+          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <div class="flex-1 relative">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+              <input type="text" id="alerts-search-input" oninput="window.raastaApp.filterAlertsTable()" placeholder="Search road name, landmark, or issue..." class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+            </div>
+
+            <!-- Severity Dropdown Filter -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-burgundy whitespace-nowrap flex items-center gap-1">
+                <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Severity:
+              </span>
+              <select id="alerts-severity-select" onchange="window.raastaApp.filterAlertsBySeverity(this.value)" class="px-3 py-2 border border-slate-300 rounded-lg bg-cream font-semibold text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-burgundy">
+                <option value="all">All Severities</option>
+                <option value="critical">Critical Impact</option>
+                <option value="moderate">Moderate Caution</option>
+                <option value="minor">Minor Alert</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Category and Resolved/Unresolved Status Pill Tabs -->
+          <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-cream-border text-xs">
+            <span class="text-slate-500 font-bold mr-1">Category & Status:</span>
+            <button onclick="window.raastaApp.filterAlertsByCategory('all')" class="alert-cat-btn px-3 py-1.5 rounded-lg bg-burgundy text-cream font-semibold shadow-sm" data-cat="all">All</button>
+            <button onclick="window.raastaApp.filterAlertsByCategory('unresolved')" class="alert-cat-btn px-3 py-1.5 rounded-lg bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300 font-semibold" data-cat="unresolved">
+              <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1 animate-pulse"></span>Unresolved / Active
+            </button>
+            <button onclick="window.raastaApp.filterAlertsByCategory('resolved')" class="alert-cat-btn px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border border-emerald-300 font-semibold" data-cat="resolved">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-600 mr-1"></span>Resolved
+            </button>
+            <button onclick="window.raastaApp.filterAlertsByCategory('roadblock')" class="alert-cat-btn px-3 py-1.5 rounded-lg bg-cream-soft text-slate-700 hover:bg-cream border border-cream-border font-medium" data-cat="roadblock">Roadblocks</button>
+            <button onclick="window.raastaApp.filterAlertsByCategory('maintenance')" class="alert-cat-btn px-3 py-1.5 rounded-lg bg-cream-soft text-slate-700 hover:bg-cream border border-cream-border font-medium" data-cat="maintenance">Maintenance</button>
+            <button onclick="window.raastaApp.filterAlertsByCategory('pothole')" class="alert-cat-btn px-3 py-1.5 rounded-lg bg-cream-soft text-slate-700 hover:bg-cream border border-cream-border font-medium" data-cat="pothole">Potholes</button>
+            <button onclick="window.raastaApp.filterAlertsByCategory('diversion')" class="alert-cat-btn px-3 py-1.5 rounded-lg bg-cream-soft text-slate-700 hover:bg-cream border border-cream-border font-medium" data-cat="diversion">Diversions</button>
+            <button onclick="window.raastaApp.filterAlertsByCategory('flooding')" class="alert-cat-btn px-3 py-1.5 rounded-lg bg-cream-soft text-slate-700 hover:bg-cream border border-cream-border font-medium" data-cat="flooding">Flooding</button>
+          </div>
+        </div>
+
+        <!-- Alerts Cards Grid -->
+        <div id="alerts-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Populated by JS -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 5. REPORT A ROAD ISSUE VIEW -->
+    <section id="view-report" class="view-panel hidden py-8 px-4 sm:px-6 max-w-4xl mx-auto w-full">
+      <div class="space-y-6">
+        
+        <div class="text-center space-y-2">
+          <div class="w-12 h-12 rounded-2xl bg-burgundy text-amber-300 flex items-center justify-center mx-auto shadow-md">
+            <i data-lucide="megaphone" class="w-6 h-6"></i>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Report a Road Disruption</h2>
+          <p class="text-sm text-slate-600 max-w-xl mx-auto">
+            Help your fellow Belagavi citizens avoid roadblocks, open trenches, and deep potholes. Anonymous reports are welcome and validated by the community.
+          </p>
+        </div>
+
+        <form id="report-issue-form" onsubmit="window.raastaApp.handleReportSubmit(event)" class="raasta-card p-6 sm:p-8 space-y-6">
+          
+          <!-- Category Selection -->
+          <div>
+            <label class="block text-xs font-bold text-burgundy uppercase mb-2">1. Incident Category *</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <label class="cursor-pointer border border-slate-300 p-3 rounded-xl hover:border-burgundy flex items-center gap-2.5 transition has-[:checked]:border-burgundy has-[:checked]:bg-burgundy/5 has-[:checked]:ring-1 has-[:checked]:ring-burgundy">
+                <input type="radio" name="reportCategory" value="roadblock" checked class="text-burgundy">
+                <div>
+                  <p class="text-xs font-bold text-slate-900">Roadblock</p>
+                  <p class="text-[10px] text-slate-500">Bridge / Full closure</p>
+                </div>
+              </label>
+
+              <label class="cursor-pointer border border-slate-300 p-3 rounded-xl hover:border-burgundy flex items-center gap-2.5 transition has-[:checked]:border-burgundy has-[:checked]:bg-burgundy/5 has-[:checked]:ring-1 has-[:checked]:ring-burgundy">
+                <input type="radio" name="reportCategory" value="maintenance" class="text-burgundy">
+                <div>
+                  <p class="text-xs font-bold text-slate-900">Maintenance</p>
+                  <p class="text-[10px] text-slate-500">Pipes / asphalt work</p>
+                </div>
+              </label>
+
+              <label class="cursor-pointer border border-slate-300 p-3 rounded-xl hover:border-burgundy flex items-center gap-2.5 transition has-[:checked]:border-burgundy has-[:checked]:bg-burgundy/5 has-[:checked]:ring-1 has-[:checked]:ring-burgundy">
+                <input type="radio" name="reportCategory" value="pothole" class="text-burgundy">
+                <div>
+                  <p class="text-xs font-bold text-slate-900">Pothole Cluster</p>
+                  <p class="text-[10px] text-slate-500">Deep road craters</p>
+                </div>
+              </label>
+
+              <label class="cursor-pointer border border-slate-300 p-3 rounded-xl hover:border-burgundy flex items-center gap-2.5 transition has-[:checked]:border-burgundy has-[:checked]:bg-burgundy/5 has-[:checked]:ring-1 has-[:checked]:ring-burgundy">
+                <input type="radio" name="reportCategory" value="diversion" class="text-burgundy">
+                <div>
+                  <p class="text-xs font-bold text-slate-900">Traffic Diversion</p>
+                  <p class="text-[10px] text-slate-500">One-way / detour</p>
+                </div>
+              </label>
+
+              <label class="cursor-pointer border border-slate-300 p-3 rounded-xl hover:border-burgundy flex items-center gap-2.5 transition has-[:checked]:border-burgundy has-[:checked]:bg-burgundy/5 has-[:checked]:ring-1 has-[:checked]:ring-burgundy">
+                <input type="radio" name="reportCategory" value="flooding" class="text-burgundy">
+                <div>
+                  <p class="text-xs font-bold text-slate-900">Waterlogging</p>
+                  <p class="text-[10px] text-slate-500">Flooded underpass</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Location Information -->
+          <div class="space-y-4">
+            <label class="block text-xs font-bold text-burgundy uppercase">2. Location Details (Belagavi) *</label>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-slate-600 mb-1">Road Name *</label>
+                <input type="text" id="report-road-name" required placeholder="e.g. Khanapur Road, College Road" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+              </div>
+
+              <div>
+                <label class="block text-xs text-slate-600 mb-1">Nearest Landmark / Cross</label>
+                <input type="text" id="report-landmark" placeholder="e.g. Near Goaves Circle, Tilakwadi" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+              </div>
+            </div>
+
+            <!-- Mini Pin Picker Leaflet Map & Exact Coordinates Display -->
+            <div class="space-y-2">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <span class="text-xs text-slate-600 font-medium">Drag pin or click map to pinpoint exact location in Belagavi:</span>
+                <span class="text-[11px] font-bold text-burgundy bg-cream px-2 py-0.5 rounded border border-cream-border" id="pin-coords-display">15.8497° N, 74.4977° E</span>
+              </div>
+              <div id="picker-map" class="h-60 w-full rounded-xl border border-slate-300 shadow-sm relative z-0"></div>
+              
+              <!-- Exact Coordinates Autofill Fields -->
+              <div class="p-3 bg-cream rounded-xl border border-cream-border grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label class="block font-bold text-burgundy mb-1 flex items-center gap-1">
+                    <i data-lucide="crosshair" class="w-3.5 h-3.5 text-amber-500"></i> Exact Location Latitude (Autofilled):
+                  </label>
+                  <input type="text" id="report-lat" value="15.8497" readonly class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg font-mono text-slate-800 text-xs font-semibold focus:outline-none">
+                </div>
+                <div>
+                  <label class="block font-bold text-burgundy mb-1 flex items-center gap-1">
+                    <i data-lucide="crosshair" class="w-3.5 h-3.5 text-amber-500"></i> Exact Location Longitude (Autofilled):
+                  </label>
+                  <input type="text" id="report-lng" value="74.4977" readonly class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg font-mono text-slate-800 text-xs font-semibold focus:outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details & Severity -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-burgundy uppercase mb-1">3. Brief Title & Observation *</label>
+              <input type="text" id="report-title" required placeholder="e.g. Open trench across both lanes near bridge" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream mb-2">
+              <textarea id="report-description" rows="3" placeholder="Provide extra helpful context for drivers (e.g. Can 2-wheelers pass? Is water rising?)" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-burgundy uppercase mb-1">Impact Severity *</label>
+              <select id="report-severity" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+                <option value="critical">Critical (Road Blocked / Unusable)</option>
+                <option value="moderate" selected>Moderate (Slow Lane / Hazards)</option>
+                <option value="minor">Minor (Caution required)</option>
+              </select>
+
+              <div class="mt-4">
+                <label class="block text-xs font-bold text-burgundy uppercase mb-1">Reporter Name</label>
+                <input type="text" id="report-reporter-name" placeholder="Leave empty for Anonymous" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+              </div>
+            </div>
+          </div>
+
+          <!-- Photo Upload (Optional) -->
+          <div>
+            <label class="block text-xs font-bold text-burgundy uppercase mb-1">4. Photo Verification (Optional)</label>
+            <input type="file" id="report-photo-input" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-burgundy file:text-cream hover:file:bg-burgundy-light cursor-pointer">
+            <p class="text-[11px] text-slate-500 mt-1">Uploaded images help community moderators verify road issues rapidly.</p>
+          </div>
+
+          <div class="pt-4 border-t border-cream-border flex items-center justify-between">
+            <span class="text-xs text-slate-500 flex items-center gap-1">
+              <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-600"></i> Protected by Anti-Spam Verification
+            </span>
+            <button type="submit" class="btn-primary !px-6 !py-2.5">
+              <i data-lucide="send" class="w-4 h-4"></i> Submit Road Report
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </section>
+
+    <!-- 6. USER DASHBOARD VIEW -->
+    <section id="view-dashboard" class="view-panel hidden py-8 px-4 sm:px-6 max-w-7xl mx-auto w-full">
+      <div class="space-y-6">
+        
+        <!-- Welcome Banner -->
+        <div class="bg-gradient-to-r from-burgundy to-burgundy-light rounded-2xl p-6 text-cream shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs uppercase tracking-wider font-bold text-amber-300">Belagavi Mobility Dashboard</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold mt-1">Hello, <span id="dash-user-name">Commuter</span>!</h2>
+            <p class="text-xs sm:text-sm text-cream-soft opacity-90 mt-1">Here are active road condition updates affecting your regular routes.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="window.raastaApp.switchView('route-checker')" class="btn-primary !bg-amber-400 !text-burgundy hover:!bg-amber-300 font-bold !text-xs border-none">
+              <i data-lucide="compass" class="w-4 h-4"></i> Check Journey
+            </button>
+            <button onclick="window.raastaApp.switchView('report')" class="btn-secondary !text-xs">
+              <i data-lucide="plus" class="w-4 h-4 text-burgundy"></i> Report Spot
+            </button>
+          </div>
+        </div>
+
+        <!-- Dashboard Grid: Saved Routes + Alert Feed -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Left: Saved Routes -->
+          <div class="lg:col-span-5 space-y-4">
+            <div class="raasta-card p-5">
+              <div class="flex items-center justify-between mb-3 border-b border-cream-border pb-2">
+                <h3 class="text-sm font-extrabold text-burgundy flex items-center gap-1.5">
+                  <i data-lucide="route" class="w-4 h-4 text-amber-500"></i> My Saved Routes
+                </h3>
+                <button onclick="window.raastaApp.openAddRouteModal()" class="text-xs text-burgundy font-bold hover:underline flex items-center gap-1">
+                  <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Route
+                </button>
+              </div>
+
+              <div id="dash-saved-routes-list" class="space-y-3">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Saved Places -->
+            <div class="raasta-card p-5">
+              <div class="flex items-center justify-between mb-3 border-b border-cream-border pb-2">
+                <h3 class="text-sm font-extrabold text-burgundy flex items-center gap-1.5">
+                  <i data-lucide="home" class="w-4 h-4 text-emerald-600"></i> Frequently Visited Places
+                </h3>
+                <button onclick="window.raastaApp.openAddPlaceModal()" class="text-xs text-burgundy font-bold hover:underline flex items-center gap-1">
+                  <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Place
+                </button>
+              </div>
+
+              <div id="dash-saved-places-list" class="space-y-2">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Personalized Alerts & Active Incident Summary -->
+          <div class="lg:col-span-7 space-y-4">
+            
+            <!-- Category Alert Pill Summary -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="raasta-card p-3 text-center border-l-4 border-l-red-600">
+                <p class="text-xl font-black text-red-600" id="dash-stat-closures">1</p>
+                <p class="text-[11px] font-bold text-slate-700">Roadblocks</p>
+              </div>
+              <div class="raasta-card p-3 text-center border-l-4 border-l-amber-500">
+                <p class="text-xl font-black text-amber-600" id="dash-stat-maintenance">2</p>
+                <p class="text-[11px] font-bold text-slate-700">Works</p>
+              </div>
+              <div class="raasta-card p-3 text-center border-l-4 border-l-orange-500">
+                <p class="text-xl font-black text-orange-600" id="dash-stat-potholes">1</p>
+                <p class="text-[11px] font-bold text-slate-700">Potholes</p>
+              </div>
+              <div class="raasta-card p-3 text-center border-l-4 border-l-blue-600">
+                <p class="text-xl font-black text-blue-600" id="dash-stat-flooding">1</p>
+                <p class="text-[11px] font-bold text-slate-700">Flooding</p>
+              </div>
+            </div>
+
+            <!-- Personalized Feed -->
+            <div class="raasta-card p-5">
+              <div class="flex items-center justify-between mb-4 border-b border-cream-border pb-2">
+                <h3 class="text-sm font-extrabold text-burgundy flex items-center gap-1.5">
+                  <i data-lucide="bell-ring" class="w-4 h-4 text-amber-500"></i> Active Road Incidents in Belagavi
+                </h3>
+                <span class="text-xs text-slate-500">Updated Real-Time</span>
+              </div>
+
+              <div id="dash-incidents-feed" class="space-y-3">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 7. ADMIN & MODERATION PORTAL VIEW -->
+    <section id="view-admin" class="view-panel hidden py-8 px-4 sm:px-6 max-w-7xl mx-auto w-full">
+      <div class="space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-border pb-4">
+          <div>
+            <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-red-100 text-red-800 text-xs font-bold uppercase mb-1">
+              <i data-lucide="shield" class="w-3.5 h-3.5"></i> Protected Moderation Area
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900">Belagavi Administration & Incident Moderation</h2>
+            <p class="text-xs text-slate-600">Review citizen submissions, verify notices, detect duplicates, and link official gazette references.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="window.raastaApp.resetDemoData()" class="btn-secondary !text-xs !py-1.5">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Demo Incidents
+            </button>
+            <button onclick="window.raastaApp.loadAdminData()" class="btn-primary !text-xs !py-1.5">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Reports
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Table of Reports -->
+        <div class="raasta-card overflow-hidden">
+          <div class="p-4 bg-burgundy text-cream flex items-center justify-between text-xs font-bold">
+            <span>Incident Moderation Queue</span>
+            <span id="admin-queue-count">Loading reports...</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs divide-y divide-slate-200">
+              <thead class="bg-cream-soft font-bold text-slate-700">
+                <tr>
+                  <th class="p-3">Ref ID / Title</th>
+                  <th class="p-3">Category</th>
+                  <th class="p-3">Location / Road</th>
+                  <th class="p-3">Reported By</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3">Votes</th>
+                  <th class="p-3 text-right">Moderation Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-reports-table-body" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <div class="raasta-card p-5">
+          <h3 class="text-sm font-extrabold text-burgundy mb-3 flex items-center gap-1.5">
+            <i data-lucide="file-text" class="w-4 h-4 text-amber-500"></i> Administrative Audit Log
+          </h3>
+          <div id="admin-audit-list" class="space-y-2 text-xs">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 8. HOW RAASTA WORKS / ABOUT VIEW -->
+    <section id="view-how-it-works" class="view-panel hidden py-12 px-4 sm:px-6 max-w-5xl mx-auto w-full">
+      <div class="space-y-8">
+        
+        <div class="text-center space-y-3">
+          <h2 class="text-xs font-bold text-burgundy tracking-widest uppercase">The Raasta Mission</h2>
+          <h3 class="text-3xl font-extrabold text-slate-900">Empowering Smart Travel in Belagavi</h3>
+          <p class="text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Raasta was designed to address daily traffic frustrations caused by sudden unnotified road digging, railway crossing work, and monsoonal waterlogging in Belagavi, Karnataka.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="raasta-card p-6 space-y-3">
+            <h4 class="text-base font-bold text-burgundy flex items-center gap-2">
+              <i data-lucide="target" class="w-5 h-5 text-amber-500"></i> The Core Problem
+            </h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Commuters often embark on their regular trips only to encounter an unexpected bridge barrier at Congress Road or single-lane water pipeline digging on Khanapur Road. Conventional navigation apps often report generalized traffic delay without explaining *why* the road is blocked or whether two-wheelers can navigate the diversion.
+            </p>
+          </div>
+
+          <div class="raasta-card p-6 space-y-3">
+            <h4 class="text-base font-bold text-teal flex items-center gap-2">
+              <i data-lucide="check-circle" class="w-5 h-5"></i> The Raasta Solution
+            </h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Raasta marries official municipal advisories (Belagavi City Corporation, Traffic Police) with crowdsourced confirmation. A transparent confidence score prevents fake rumours, while route-level alerts notify drivers before they step into the car.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-[#3F0712] text-[#FDF6E5] border-t border-[#5C0D1D] mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+      
+      <div class="space-y-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-[#F59E0B] flex items-center justify-center p-1">
+            <svg viewBox="0 0 40 40" fill="none" class="w-full h-full">
+              <rect width="40" height="40" rx="10" fill="#F59E0B"/>
+              <path d="M20 7C14.48 7 10 11.48 10 17C10 24.2 20 31.5 20 31.5C20 31.5 30 24.2 30 17C30 11.48 25.52 7 20 7Z" fill="#5C0D1D"/>
+              <circle cx="20" cy="35" r="2.2" fill="#5C0D1D"/>
+            </svg>
+          </div>
+          <span class="text-lg font-black tracking-tight text-[#FDF6E5]">RAASTA</span>
+        </div>
+        <p class="text-xs text-cream-soft opacity-80 leading-relaxed">
+          Know the road before you go. Real-time condition monitoring, roadblocks, and personalized journey alerts.
+        </p>
+        <p class="text-[11px] text-amber-300">Launch City: Belagavi, Karnataka, India</p>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">Explore Raasta</h4>
+        <ul class="space-y-2 text-xs text-cream-soft opacity-85">
+          <li><a href="#" onclick="window.raastaApp.switchView('map')" class="hover:text-amber-300">Live Interactive Map</a></li>
+          <li><a href="#" onclick="window.raastaApp.switchView('route-checker')" class="hover:text-amber-300">Check Any Journey</a></li>
+          <li><a href="#" onclick="window.raastaApp.switchView('alerts')" class="hover:text-amber-300">Browse Belagavi Alerts</a></li>
+          <li><a href="#" onclick="window.raastaApp.switchView('report')" class="hover:text-amber-300">Submit Incident Report</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">Verification Model</h4>
+        <ul class="space-y-2 text-xs text-cream-soft opacity-85">
+          <li class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> Officially Confirmed</li>
+          <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-blue-400"></i> Moderator Inspected</li>
+          <li class="flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5 text-purple-300"></i> Community Upvotes</li>
+          <li class="flex items-center gap-1.5"><i data-lucide="database" class="w-3.5 h-3.5 text-amber-300"></i> Demonstration Records</li>
+        </ul>
+      </div>
+
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">Settings & Controls</h4>
+        <button onclick="window.raastaApp.openApiModal()" class="w-full text-left px-3 py-2 bg-[#5C0D1D] hover:bg-[#7E1529] rounded-lg text-xs font-semibold flex items-center justify-between border border-[#7E1529]">
+          <span>Google Maps API Key</span>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="window.raastaApp.switchView('admin')" class="w-full text-left px-3 py-2 bg-[#5C0D1D] hover:bg-[#7E1529] rounded-lg text-xs font-semibold flex items-center justify-between border border-[#7E1529]">
+          <span>Moderator Console</span>
+          <i data-lucide="shield" class="w-3.5 h-3.5 text-amber-300"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <div class="border-t border-[#5C0D1D] py-4 text-center text-xs text-cream-soft opacity-70">
+      &copy; 2026 Raasta Mobility Platform. Built for Belagavi, Karnataka. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Incident Detail Modal -->
+  <div id="modal-incident-detail" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="raasta-card w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-6 space-y-4 shadow-2xl relative">
+      <button onclick="window.raastaApp.closeModal('modal-incident-detail')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div id="incident-modal-content">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Authentication Modal (Login & Sign Up) -->
+  <div id="modal-auth" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="raasta-card w-full max-w-md bg-white p-6 sm:p-8 space-y-5 shadow-2xl relative">
+      <button onclick="window.raastaApp.closeModal('modal-auth')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center space-y-1">
+        <h3 id="auth-modal-title" class="text-xl font-extrabold text-burgundy">Sign in to Raasta</h3>
+        <p class="text-xs text-slate-600">Save routes, personalize Belagavi alerts, and track road conditions.</p>
+      </div>
+
+      <!-- Quick Demo Login Buttons for Evaluator -->
+      <div class="p-3 bg-cream-soft border border-cream-border rounded-xl space-y-2">
+        <p class="text-[11px] font-bold text-burgundy uppercase text-center">Fast Demo 1-Click Access</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="window.raastaApp.quickLogin('user')" class="px-2 py-1.5 bg-white hover:bg-cream border border-slate-300 rounded text-xs font-semibold text-slate-800 flex items-center justify-center gap-1">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-blue-600"></i> Commuter Demo
+          </button>
+          <button onclick="window.raastaApp.quickLogin('admin')" class="px-2 py-1.5 bg-burgundy hover:bg-burgundy-light text-cream rounded text-xs font-semibold flex items-center justify-center gap-1">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-amber-300"></i> Admin Demo
+          </button>
+        </div>
+      </div>
+
+      <form id="auth-form" onsubmit="window.raastaApp.handleAuthSubmit(event)" class="space-y-4">
+        <div id="auth-name-field" class="hidden">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Full Name</label>
+          <input type="text" id="auth-name" placeholder="Rahul Deshmukh" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email Address</label>
+          <input type="email" id="auth-email" required placeholder="name@example.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password</label>
+          <input type="password" id="auth-password" required placeholder="••••••••" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="btn-primary w-full justify-center !py-2.5">
+          Sign In
+        </button>
+      </form>
+
+      <div class="text-center text-xs text-slate-600 pt-2 border-t border-slate-200">
+        <span id="auth-switch-prompt">Don't have an account?</span>
+        <button onclick="window.raastaApp.toggleAuthMode()" id="auth-switch-btn" class="font-bold text-burgundy ml-1 underline">Sign Up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Google Maps API Key Modal -->
+  <div id="modal-api" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="raasta-card w-full max-w-lg bg-white p-6 space-y-4 shadow-2xl relative">
+      <button onclick="window.raastaApp.closeModal('modal-api')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-2">
+        <div class="p-2 bg-amber-100 text-amber-800 rounded-lg">
+          <i data-lucide="key" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-burgundy">Map Engine & Google Maps API Key</h3>
+          <p class="text-xs text-slate-600">Configured for Belagavi, Karnataka</p>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Raasta utilizes a high-performance Leaflet & OpenStreetMap interactive engine with full routing, clustering, and coordinates out of the box. You can also paste your Google Maps Platform API key below to link cloud map tiles and direction services.
+      </p>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-700 uppercase">Google Maps Platform API Key (Optional)</label>
+        <input type="text" id="settings-google-api-key" placeholder="AIzaSy..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono bg-cream">
+        <p class="text-[11px] text-slate-500">Leaving this blank maintains the seamless OpenStreetMap Belagavi engine.</p>
+      </div>
+
+      <div class="pt-3 border-t border-cream-border flex justify-end gap-2">
+        <button onclick="window.raastaApp.closeModal('modal-api')" class="btn-secondary !text-xs !py-1.5">Cancel</button>
+        <button onclick="window.raastaApp.saveApiSettings()" class="btn-primary !text-xs !py-1.5">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Add Route Modal -->
+  <div id="modal-add-route" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="raasta-card w-full max-w-md bg-white p-6 space-y-4 shadow-2xl relative">
+      <button onclick="window.raastaApp.closeModal('modal-add-route')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <h3 class="text-base font-extrabold text-burgundy">Add Saved Journey Route</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Route Label</label>
+          <input type="text" id="new-route-title" placeholder="e.g. Daily Commute to College" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Origin (Belagavi)</label>
+          <input type="text" id="new-route-origin" placeholder="e.g. Tilakwadi 2nd Gate" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Destination</label>
+          <input type="text" id="new-route-dest" placeholder="e.g. KLE Tech / VTU Machhe" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-cream-border flex justify-end gap-2">
+        <button onclick="window.raastaApp.closeModal('modal-add-route')" class="btn-secondary !text-xs !py-1.5">Cancel</button>
+        <button onclick="window.raastaApp.submitNewSavedRoute()" class="btn-primary !text-xs !py-1.5">Save Route</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Add Place Modal -->
+  <div id="modal-add-place" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="raasta-card w-full max-w-md bg-white p-6 space-y-4 shadow-2xl relative">
+      <button onclick="window.raastaApp.closeModal('modal-add-place')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <h3 class="text-base font-extrabold text-burgundy">Add Frequently Visited Place</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Place Name / Label</label>
+          <input type="text" id="new-place-label" placeholder="e.g. Office, Gym, Home" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Address in Belagavi</label>
+          <input type="text" id="new-place-address" placeholder="e.g. Camp Area, Belagavi" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-cream">
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-cream-border flex justify-end gap-2">
+        <button onclick="window.raastaApp.closeModal('modal-add-place')" class="btn-secondary !text-xs !py-1.5">Cancel</button>
+        <button onclick="window.raastaApp.submitNewSavedPlace()" class="btn-primary !text-xs !py-1.5">Save Place</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Interactive Pin Drop Map Picker Modal -->
+  <div id="modal-pin-picker" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="raasta-card w-full max-w-2xl bg-white p-6 space-y-4 shadow-2xl relative">
+      <button onclick="window.raastaApp.closeModal('modal-pin-picker')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-2 border-b border-cream-border pb-3">
+        <div class="p-2 bg-amber-100 text-burgundy rounded-lg">
+          <i data-lucide="map-pin" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-burgundy">Drop Location Pin on Map (Belagavi)</h3>
+          <p class="text-xs text-slate-600">Click anywhere or drag the pin to select your origin or destination.</p>
+        </div>
+      </div>
+
+      <!-- Quick Landmark shortcuts inside modal -->
+      <div class="flex flex-wrap items-center gap-1.5 text-xs">
+        <span class="text-slate-500 font-bold">Quick Landmarks:</span>
+        <button type="button" onclick="window.raastaApp.setPickerPreset('Tilakwadi 3rd Gate', 15.8365, 74.5082)" class="px-2 py-0.5 bg-cream hover:bg-cream-soft border border-cream-border rounded text-[11px] font-medium text-burgundy">Tilakwadi 3rd Gate</button>
+        <button type="button" onclick="window.raastaApp.setPickerPreset('Rani Chennamma Circle', 15.8596, 74.5098)" class="px-2 py-0.5 bg-cream hover:bg-cream-soft border border-cream-border rounded text-[11px] font-medium text-burgundy">Chennamma Circle</button>
+        <button type="button" onclick="window.raastaApp.setPickerPreset('Bogarves Junction', 15.8521, 74.5042)" class="px-2 py-0.5 bg-cream hover:bg-cream-soft border border-cream-border rounded text-[11px] font-medium text-burgundy">Bogarves</button>
+        <button type="button" onclick="window.raastaApp.setPickerPreset('Sambra Airport Road', 15.8712, 74.5421)" class="px-2 py-0.5 bg-cream hover:bg-cream-soft border border-cream-border rounded text-[11px] font-medium text-burgundy">Sambra Airport</button>
+        <button type="button" onclick="window.raastaApp.setPickerPreset('VTU Campus, Machhe', 15.8891, 74.5367)" class="px-2 py-0.5 bg-cream hover:bg-cream-soft border border-cream-border rounded text-[11px] font-medium text-burgundy">VTU Campus</button>
+      </div>
+
+      <div id="interactive-pin-picker-map" class="h-72 w-full rounded-xl border border-slate-300"></div>
+
+      <div class="flex items-center justify-between text-xs p-3 bg-cream rounded-xl">
+        <div>
+          <span class="text-slate-500 font-medium">Selected Location:</span>
+          <p id="picker-selected-address" class="font-bold text-slate-800 text-sm mt-0.5">Tilakwadi 3rd Gate, Belagavi</p>
+        </div>
+        <span id="picker-selected-coords" class="text-[11px] font-mono text-burgundy font-semibold">15.8497° N, 74.4977° E</span>
+      </div>
+
+      <div class="pt-2 border-t border-cream-border flex justify-end gap-2">
+        <button onclick="window.raastaApp.closeModal('modal-pin-picker')" class="btn-secondary !text-xs !py-1.5">Cancel</button>
+        <button onclick="window.raastaApp.confirmPinPickerSelection()" class="btn-primary !text-xs !py-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i> Confirm Location
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GLOBAL BACKEND PROCESSING & PERCENTAGE LOADER ==================== -->
+  <div id="raasta-global-loader" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-200">
+    <div class="raasta-card w-full max-w-md bg-white p-7 rounded-2xl shadow-2xl border-2 border-amber-300 space-y-5 text-center relative animate-fade-in">
+      
+      <!-- Animated Icon and Brand Badge -->
+      <div class="flex justify-center">
+        <div class="relative">
+          <div class="w-16 h-16 rounded-2xl bg-[#F59E0B] flex items-center justify-center shadow-lg p-2.5">
+            <svg viewBox="0 0 40 40" fill="none" class="w-full h-full">
+              <rect width="40" height="40" rx="10" fill="#F59E0B"/>
+              <path d="M20 7C14.48 7 10 11.48 10 17C10 24.2 20 31.5 20 31.5C20 31.5 30 24.2 30 17C30 11.48 25.52 7 20 7Z" fill="#5C0D1D"/>
+              <circle cx="20" cy="35" r="2.2" fill="#5C0D1D"/>
+            </svg>
+          </div>
+          <!-- Spinning radar ping ring -->
+          <div class="absolute -inset-1 rounded-2xl border-2 border-burgundy/30 animate-ping pointer-events-none"></div>
+        </div>
+      </div>
+
+      <!-- Title & Live Status -->
+      <div class="space-y-1">
+        <h3 id="loader-status-title" class="text-base font-extrabold text-burgundy">Processing Request...</h3>
+        <p id="loader-status-subtitle" class="text-xs text-slate-500 font-medium">Communicating with Belagavi traffic and road telemetry server</p>
+      </div>
+
+      <!-- Percentage Counter Display -->
+      <div class="flex items-baseline justify-center gap-1">
+        <span id="loader-percentage-number" class="text-4xl font-black text-burgundy font-mono tracking-tight">0</span>
+        <span class="text-xl font-extrabold text-amber-500 font-mono">%</span>
+      </div>
+
+      <!-- Progress Track & Animated Bar -->
+      <div class="space-y-1.5">
+        <div class="w-full h-3 bg-amber-100 rounded-full overflow-hidden p-0.5 border border-amber-200 shadow-inner">
+          <div id="loader-progress-bar" class="h-full bg-gradient-to-r from-amber-500 to-burgundy rounded-full transition-all duration-150 ease-out" style="width: 0%;"></div>
+        </div>
+        <div class="flex justify-between items-center text-[11px] text-slate-400 font-medium px-1">
+          <span id="loader-step-text">Initiating handshake...</span>
+          <span class="text-burgundy font-bold">Raasta Engine</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Top Global Nanobar for Seamless Feedback -->
+  <div id="raasta-top-progress" class="fixed top-0 left-0 right-0 h-1 z-[10000] bg-transparent pointer-events-none">
+    <div id="raasta-top-bar" class="h-full bg-gradient-to-r from-amber-400 via-amber-500 to-burgundy shadow-sm transition-all duration-100 ease-out" style="width: 0%; opacity: 0;"></div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
