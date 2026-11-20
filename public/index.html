@@ -95,6 +95,13 @@
         </div>
       </a>
 
+      <!-- Real-Time SSE Auto-Sync Badge -->
+      <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#3F0712] border border-[#7E1529] text-[11px] font-semibold text-cream">
+        <span id="sse-indicator-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="sse-indicator-text" class="text-amber-300 font-bold">Auto-Sync Active</span>
+        <span class="text-cream-soft opacity-60 text-[10px]">| Asia/Kolkata</span>
+      </div>
+
       <!-- Navigation Links -->
       <nav class="hidden lg:flex items-center gap-1 text-sm font-medium">
         <button onclick="window.raastaApp.switchView('landing')" class="nav-item px-3 py-2 rounded-lg hover:bg-[#7E1529] text-[#FDF6E5] transition" data-view="landing">Home</button>
@@ -943,6 +950,9 @@
           </div>
 
           <div class="flex items-center gap-2">
+            <button onclick="window.raastaApp.triggerAutoSyncCheck()" class="btn-primary !text-xs !py-1.5 flex items-center gap-1.5">
+              <i data-lucide="scan" class="w-3.5 h-3.5"></i> Run Auto-Sync Check
+            </button>
             <button onclick="window.raastaApp.resetDemoData()" class="btn-secondary !text-xs !py-1.5">
               <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Demo Incidents
             </button>
@@ -950,6 +960,116 @@
               <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Reports
             </button>
           </div>
+        </div>
+
+        <!-- ==================== RAASTA AUTO-SYNC CENTRE ==================== -->
+        <div class="raasta-card p-6 space-y-6 border-2 border-amber-300 bg-gradient-to-br from-white via-cream to-cream-soft shadow-lg">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-cream-border gap-3">
+            <div>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-burgundy text-amber-300 text-xs font-black uppercase tracking-wider mb-1 shadow-sm">
+                <i data-lucide="cpu" class="w-4 h-4 text-amber-400"></i> Autonomous Engine
+              </div>
+              <h3 class="text-xl font-black text-burgundy flex items-center gap-2">
+                RAASTA AUTO-SYNC CENTRE
+                <span id="sync-engine-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live & Active
+                </span>
+              </h3>
+              <p class="text-xs text-slate-600 mt-0.5">Continuous background monitoring across municipal advisories, traffic alerts, and road maintenance feeds for Belagavi, Karnataka.</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="window.raastaApp.openSimulateModal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                <i data-lucide="test-tube" class="w-3.5 h-3.5"></i> Test Simulator
+              </button>
+              <button onclick="window.raastaApp.openAddSourceModal()" class="btn-secondary !text-xs !py-1.5 flex items-center gap-1">
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-burgundy"></i> Add Custom Source
+              </button>
+            </div>
+          </div>
+
+          <!-- Top Real-Time Metrics Grid -->
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-white p-3.5 rounded-xl border border-cream-border shadow-sm">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Connected Sources</span>
+              <p id="sync-metric-sources" class="text-2xl font-black text-burgundy mt-1">--</p>
+              <span class="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5 mt-0.5">
+                <i data-lucide="check" class="w-3 h-3"></i> Belagavi Feeds
+              </span>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-cream-border shadow-sm">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Last Successful Check</span>
+              <p id="sync-metric-last-check" class="text-sm font-black text-slate-800 mt-2 truncate">--</p>
+              <span class="text-[10px] text-slate-500 font-medium">Asia/Kolkata</span>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-cream-border shadow-sm">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Next Scheduled Check</span>
+              <p id="sync-metric-next-check" class="text-sm font-black text-amber-700 mt-2 truncate">In ~15 mins</p>
+              <span class="text-[10px] text-slate-500 font-medium">Automatic worker</span>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-cream-border shadow-sm">
+              <span class="text-[10px] uppercase font-bold text-slate-400">New Detected</span>
+              <p id="sync-metric-new" class="text-2xl font-black text-emerald-700 mt-1">0</p>
+              <span class="text-[10px] text-emerald-600 font-medium">Incidents captured</span>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-cream-border shadow-sm">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Incidents Updated</span>
+              <p id="sync-metric-updated" class="text-2xl font-black text-amber-600 mt-1">0</p>
+              <span class="text-[10px] text-amber-700 font-medium">Audited & reconciled</span>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-cream-border shadow-sm">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Failed Checks</span>
+              <p id="sync-metric-failed" class="text-2xl font-black text-red-600 mt-1">0</p>
+              <span class="text-[10px] text-red-700 font-medium">Recorded in log</span>
+            </div>
+          </div>
+
+          <!-- Connected Information Sources Registry Table -->
+          <div class="bg-white rounded-xl border border-cream-border overflow-hidden shadow-sm">
+            <div class="p-3.5 bg-burgundy-light text-cream flex items-center justify-between text-xs font-bold">
+              <span class="flex items-center gap-1.5"><i data-lucide="radio" class="w-4 h-4 text-amber-400"></i> Connected Information Sources & Status</span>
+              <span class="text-[11px] opacity-80">Honors Rate Limits & Public Access Policies</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs divide-y divide-slate-100">
+                <thead class="bg-cream-soft font-bold text-slate-700">
+                  <tr>
+                    <th class="p-3">Source Name & Target</th>
+                    <th class="p-3">Category</th>
+                    <th class="p-3">Trust Level</th>
+                    <th class="p-3">Check Interval</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3">Last Checked</th>
+                    <th class="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="sync-sources-table-body" class="divide-y divide-slate-100">
+                  <!-- Dynamically populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Live Real-Time Synchronization Audit Trail -->
+          <div class="bg-white p-4 rounded-xl border border-cream-border space-y-2.5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-black uppercase text-burgundy flex items-center gap-1.5">
+                <i data-lucide="activity" class="w-4 h-4 text-emerald-600"></i> Live Auto-Sync Activity & Change Log
+              </h4>
+              <span class="text-[10px] text-slate-400 font-mono">Streamed via Server-Sent Events</span>
+            </div>
+            <div id="sync-activity-log" class="max-h-48 overflow-y-auto space-y-1.5 text-xs font-mono bg-slate-900 text-slate-200 p-3 rounded-lg border border-slate-700">
+              <div class="text-slate-400">[System] Real-time monitoring log initialized. Listening for engine broadcasts...</div>
+            </div>
+          </div>
+
         </div>
 
         <!-- Admin Table of Reports -->
@@ -1290,6 +1410,176 @@
           <i data-lucide="check" class="w-3.5 h-3.5"></i> Confirm Location
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 7. Road Disruption Simulator Modal (Testing & Verification) -->
+  <div id="modal-test-simulator" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="raasta-card w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-6 space-y-4 shadow-2xl relative border-2 border-amber-300">
+      <button onclick="window.raastaApp.closeModal('modal-test-simulator')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-2 border-b border-cream-border pb-3">
+        <div class="p-2 bg-amber-100 text-burgundy rounded-lg">
+          <i data-lucide="test-tube" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-burgundy">Belagavi Disruption Notice Simulator</h3>
+          <p class="text-xs text-slate-600">Simulate official notices, timeline shifts, or road reopenings for live automated pipeline testing.</p>
+        </div>
+      </div>
+
+      <!-- Quick Preset Buttons for Rapid Testing -->
+      <div class="space-y-1.5">
+        <span class="text-xs font-bold text-slate-600">Quick Test Scenarios:</span>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button type="button" onclick="window.raastaApp.fillSimPreset('closure')" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-800 border border-red-200 rounded font-semibold">
+            1. New Road Closure Notice
+          </button>
+          <button type="button" onclick="window.raastaApp.fillSimPreset('update')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded font-semibold">
+            2. Extended Timeline Notice
+          </button>
+          <button type="button" onclick="window.raastaApp.fillSimPreset('reopen')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded font-semibold">
+            3. Road Reopening Clearance
+          </button>
+        </div>
+      </div>
+
+      <form id="sim-notice-form" onsubmit="window.raastaApp.submitSimulateNotice(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Notice Title / Advisory Subject *</label>
+          <input type="text" id="sim-title" required placeholder="e.g. Emergency Overbridge Repair Closure" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Corridor / Road Name *</label>
+            <input type="text" id="sim-road" required list="belagavi-places-list" placeholder="e.g. Congress Road Railway Overbridge" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Landmark / Zone</label>
+            <input type="text" id="sim-landmark" placeholder="e.g. Near 3rd Railway Gate, Tilakwadi" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Category</label>
+            <select id="sim-category" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+              <option value="roadblock">Roadblock & Closure</option>
+              <option value="maintenance">Maintenance & Work</option>
+              <option value="pothole">Pothole & Damaged Road</option>
+              <option value="diversion">Diversion & Traffic Change</option>
+              <option value="flooding">Waterlogging & Flooding</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Severity</label>
+            <select id="sim-severity" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+              <option value="critical">Critical Impact</option>
+              <option value="moderate">Moderate Caution</option>
+              <option value="minor">Minor Alert</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Status Transition</label>
+            <select id="sim-status" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+              <option value="active">Active Roadblock</option>
+              <option value="resolved">Resolved / Reopened</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Expected End / Clearance Timeline</label>
+          <input type="text" id="sim-end-time" placeholder="e.g. Tomorrow, 08:00 PM" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Notice Description & Diversion Details</label>
+          <textarea id="sim-desc" rows="3" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium" placeholder="Official announcement text..."></textarea>
+        </div>
+
+        <div class="pt-2 border-t border-cream-border flex justify-end gap-2">
+          <button type="button" onclick="window.raastaApp.closeModal('modal-test-simulator')" class="btn-secondary !text-xs !py-1.5">Cancel</button>
+          <button type="submit" class="btn-primary !text-xs !py-1.5 flex items-center gap-1.5">
+            <i data-lucide="play" class="w-3.5 h-3.5"></i> Emit & Trigger Auto-Detection
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8. Add Custom Information Source Modal -->
+  <div id="modal-add-custom-source" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="raasta-card w-full max-w-lg bg-white p-6 space-y-4 shadow-2xl relative">
+      <button onclick="window.raastaApp.closeModal('modal-add-custom-source')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-2 border-b border-cream-border pb-3">
+        <div class="p-2 bg-amber-100 text-burgundy rounded-lg">
+          <i data-lucide="rss" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-burgundy">Add Custom Information Source</h3>
+          <p class="text-xs text-slate-600">Register a public civic bulletin, RSS feed, or civic advisory endpoint (SSRF protected).</p>
+        </div>
+      </div>
+
+      <form id="custom-source-form" onsubmit="window.raastaApp.submitCustomSource(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Source Name *</label>
+          <input type="text" id="cust-source-name" required placeholder="e.g. Belagavi District Police Open Dispatch" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Source Target URL * (Public HTTP/HTTPS only)</label>
+          <input type="url" id="cust-source-url" required placeholder="https://example.gov.in/feed" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Category</label>
+            <select id="cust-source-category" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+              <option value="roadblock">Roadblock</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="pothole">Pothole</option>
+              <option value="diversion">Diversion</option>
+              <option value="flooding">Flooding</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Checking Interval</label>
+            <select id="cust-source-interval" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+              <option value="15">Every 15 mins</option>
+              <option value="30">Every 30 mins</option>
+              <option value="60">Every 1 hour</option>
+              <option value="360">Every 6 hours</option>
+              <option value="1440">Once daily (24h)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Trust & Verification Policy</label>
+          <select id="cust-source-trust" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+            <option value="Awaiting Verification">Awaiting Verification (Requires Moderator Approval)</option>
+            <option value="Officially Confirmed">Officially Confirmed (Authenticated Public Authority)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Administrative Notes</label>
+          <input type="text" id="cust-source-notes" placeholder="e.g. Authorized by ward engineer" class="w-full p-2.5 border border-slate-300 rounded-lg bg-cream font-medium">
+        </div>
+
+        <div class="pt-2 border-t border-cream-border flex justify-end gap-2">
+          <button type="button" onclick="window.raastaApp.closeModal('modal-add-custom-source')" class="btn-secondary !text-xs !py-1.5">Cancel</button>
+          <button type="submit" class="btn-primary !text-xs !py-1.5">Register & Connect</button>
+        </div>
+      </form>
     </div>
   </div>
 

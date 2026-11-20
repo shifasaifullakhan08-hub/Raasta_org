@@ -321,6 +321,9 @@
     // Setup map picker map lazily when viewing report
     initMainMap();
 
+    // Connect to Real-time SSE stream with automatic reconnection & fallback
+    initRealtimeSync();
+
     // Check URL hash if direct navigation
     const hash = window.location.hash.replace('#', '');
     if (hash && ['landing', 'map', 'route-checker', 'alerts', 'report', 'dashboard', 'admin', 'how-it-works'].includes(hash)) {
@@ -1314,9 +1317,441 @@
         `).join('');
       }
 
+      // Also refresh Auto-Sync Centre sources and status
+      await loadAutoSyncData();
+
     } catch (e) {
       console.error(e);
     }
+  }
+
+  // ==================== AUTO-SYNC CENTRE FRONTEND CONTROLLER ====================
+  async function loadAutoSyncData() {
+    try {
+      const res = await fetch('/api/autosync/status');
+      if (!res.ok) return;
+      const data = await res.json();
+      renderAutoSyncCentre(data);
+    } catch (err) {
+      console.warn('AutoSync status fetch notice:', err);
+    }
+  }
+
+  function renderAutoSyncCentre(data) {
+    if (!data) return;
+
+    // Metrics
+    const metricSources = document.getElementById('sync-metric-sources');
+    const metricLast = document.getElementById('sync-metric-last-check');
+    const metricNext = document.getElementById('sync-metric-next-check');
+    const metricNew = document.getElementById('sync-metric-new');
+    const metricUpdated = document.getElementById('sync-metric-updated');
+    const metricFailed = document.getElementById('sync-metric-failed');
+    const engineBadge = document.getElementById('sync-engine-badge');
+
+    if (metricSources) metricSources.textContent = `${data.sources.filter(s => s.enabled).length} / ${data.sources.length}`;
+    if (metricLast) metricLast.textContent = data.stats.lastCheckTime ? formatRelativeTime(data.stats.lastCheckTime) : 'Pending first cycle';
+    if (metricNext) metricNext.textContent = 'Scheduled (Active)';
+    if (metricNew) metricNew.textContent = data.stats.newIncidentsDetected;
+    if (metricUpdated) metricUpdated.textContent = data.stats.incidentsUpdated;
+    if (metricFailed) metricFailed.textContent = data.stats.failedChecksCount;
+
+    if (engineBadge) {
+      if (data.isRunning) {
+        engineBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold flex items-center gap-1';
+        engineBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live & Active';
+      } else {
+        engineBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-300 font-bold flex items-center gap-1';
+        engineBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span> Paused';
+      }
+    }
+
+    // Sources Table
+    const sourcesTable = document.getElementById('sync-sources-table-body');
+    if (sourcesTable && data.sources) {
+      sourcesTable.innerHTML = data.sources.map(src => {
+        let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">Unknown</span>';
+        if (src.status === 'Connected') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Connected</span>';
+        } else if (src.status === 'Checking') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">Checking...</span>';
+        } else if (src.status === 'Updated') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300">Updated</span>';
+        } else if (src.status === 'No new information') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cream-soft text-slate-700 border border-cream-border">No new info</span>';
+        } else if (src.status === 'Temporarily unavailable') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 border border-red-300">Unavailable</span>';
+        } else if (src.status === 'Authentication required') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300">Auth required</span>';
+        } else if (src.status === 'Disabled') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">Disabled</span>';
+        }
+
+        return `
+          <tr class="hover:bg-cream">
+            <td class="p-3">
+              <p class="font-bold text-slate-900">${escapeHtml(src.name)}</p>
+              <p class="text-[10px] text-slate-500 font-mono truncate max-w-xs">${escapeHtml(src.url)}</p>
+              ${src.lastError ? `<p class="text-[10px] text-red-600 font-medium mt-0.5">${escapeHtml(src.lastError)}</p>` : ''}
+            </td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase" style="background:${CATEGORY_COLORS[src.category] || '#5C0D1D'}">
+                ${src.category}
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="text-[10px] font-bold ${src.trustLevel === 'Officially Confirmed' ? 'text-emerald-700' : 'text-amber-700'}">
+                ${src.trustLevel}
+              </span>
+            </td>
+            <td class="p-3">
+              <select onchange="window.raastaApp.changeSourceInterval('${src.id}', this.value)" class="text-[10px] p-1 border border-slate-300 rounded bg-cream font-medium">
+                <option value="15" ${src.intervalMinutes === 15 ? 'selected' : ''}>15 mins</option>
+                <option value="30" ${src.intervalMinutes === 30 ? 'selected' : ''}>30 mins</option>
+                <option value="60" ${src.intervalMinutes === 60 ? 'selected' : ''}>1 hour</option>
+                <option value="360" ${src.intervalMinutes === 360 ? 'selected' : ''}>6 hours</option>
+                <option value="1440" ${src.intervalMinutes === 1440 ? 'selected' : ''}>24 hours</option>
+              </select>
+            </td>
+            <td class="p-3">${statusBadge}</td>
+            <td class="p-3 text-[10px] text-slate-500">
+              ${src.lastChecked ? formatRelativeTime(src.lastChecked) : 'Never'}
+            </td>
+            <td class="p-3 text-right space-x-1 whitespace-nowrap">
+              <button onclick="window.raastaApp.triggerSourceCheck('${src.id}')" title="Check Now" class="px-2 py-1 bg-burgundy hover:bg-burgundy-light text-white rounded text-[10px] font-bold">
+                Check
+              </button>
+              <button onclick="window.raastaApp.toggleSource('${src.id}', ${!src.enabled})" class="px-2 py-1 ${src.enabled ? 'bg-slate-200 hover:bg-slate-300 text-slate-800' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} rounded text-[10px] font-bold">
+                ${src.enabled ? 'Disable' : 'Enable'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Activity Log
+    const logBox = document.getElementById('sync-activity-log');
+    if (logBox && data.stats.recentSyncLog) {
+      logBox.innerHTML = data.stats.recentSyncLog.map(entry => {
+        let color = 'text-slate-300';
+        if (entry.level === 'error') color = 'text-red-400';
+        if (entry.level === 'warning') color = 'text-amber-400';
+        if (entry.level === 'success') color = 'text-emerald-400';
+
+        const timeStr = new Date(entry.timestamp).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+        return `<div class="${color}">[${timeStr}] ${escapeHtml(entry.message)}</div>`;
+      }).join('');
+    }
+  }
+
+  // Auto-Sync Actions
+  async function triggerAutoSyncCheck() {
+    if (!state.token) return;
+    try {
+      const res = await fetch('/api/autosync/trigger', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`
+        },
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      alert('Automated cycle initiated across all active Belagavi sources.');
+      await loadAutoSyncData();
+      await loadIncidents();
+    } catch (e) {
+      alert('Error triggering check.');
+    }
+  }
+
+  async function triggerSourceCheck(sourceId) {
+    if (!state.token) return;
+    try {
+      const res = await fetch('/api/autosync/trigger', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`
+        },
+        body: JSON.stringify({ sourceId })
+      });
+      await loadAutoSyncData();
+      await loadIncidents();
+    } catch (e) {
+      alert('Check failed.');
+    }
+  }
+
+  async function toggleSource(sourceId, enabled) {
+    if (!state.token) return;
+    try {
+      await fetch(`/api/autosync/source/${sourceId}/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`
+        },
+        body: JSON.stringify({ enabled })
+      });
+      await loadAutoSyncData();
+    } catch (e) {
+      alert('Error toggling source.');
+    }
+  }
+
+  async function changeSourceInterval(sourceId, intervalMinutes) {
+    if (!state.token) return;
+    try {
+      await fetch(`/api/autosync/source/${sourceId}/interval`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`
+        },
+        body: JSON.stringify({ intervalMinutes })
+      });
+      await loadAutoSyncData();
+    } catch (e) {
+      alert('Error setting interval.');
+    }
+  }
+
+  function openSimulateModal() {
+    const m = document.getElementById('modal-test-simulator');
+    if (m) m.classList.remove('hidden');
+    setupLucide();
+  }
+
+  function openAddSourceModal() {
+    const m = document.getElementById('modal-add-custom-source');
+    if (m) m.classList.remove('hidden');
+    setupLucide();
+  }
+
+  function fillSimPreset(type) {
+    const titleEl = document.getElementById('sim-title');
+    const roadEl = document.getElementById('sim-road');
+    const landmarkEl = document.getElementById('sim-landmark');
+    const catEl = document.getElementById('sim-category');
+    const sevEl = document.getElementById('sim-severity');
+    const statusEl = document.getElementById('sim-status');
+    const endEl = document.getElementById('sim-end-time');
+    const descEl = document.getElementById('sim-desc');
+
+    if (type === 'closure') {
+      if (titleEl) titleEl.value = 'Emergency Overbridge Joint Replacement Closure';
+      if (roadEl) roadEl.value = 'Congress Road Railway Overbridge';
+      if (landmarkEl) landmarkEl.value = 'Near 3rd Railway Gate, Tilakwadi';
+      if (catEl) catEl.value = 'roadblock';
+      if (sevEl) sevEl.value = 'critical';
+      if (statusEl) statusEl.value = 'active';
+      if (endEl) endEl.value = 'Tomorrow, 09:00 PM';
+      if (descEl) descEl.value = 'Complete vehicular shutdown on northbound carriage by BCC Road Division. Heavy vehicles diverted via Tilakwadi 2nd Gate.';
+    } else if (type === 'update') {
+      if (titleEl) titleEl.value = 'Emergency Overbridge Joint Replacement Closure';
+      if (roadEl) roadEl.value = 'Congress Road Railway Overbridge';
+      if (landmarkEl) landmarkEl.value = 'Near 3rd Railway Gate, Tilakwadi';
+      if (catEl) catEl.value = 'roadblock';
+      if (sevEl) sevEl.value = 'critical';
+      if (statusEl) statusEl.value = 'active';
+      if (endEl) endEl.value = 'Extended by 48 Hours due to curing';
+      if (descEl) descEl.value = 'Timeline extended due to concrete curing process. Diversion remains in effect via 2nd Gate and Club Road.';
+    } else if (type === 'reopen') {
+      if (titleEl) titleEl.value = 'Emergency Overbridge Joint Replacement Closure';
+      if (roadEl) roadEl.value = 'Congress Road Railway Overbridge';
+      if (landmarkEl) landmarkEl.value = 'Near 3rd Railway Gate, Tilakwadi';
+      if (catEl) catEl.value = 'roadblock';
+      if (sevEl) sevEl.value = 'minor';
+      if (statusEl) statusEl.value = 'resolved';
+      if (endEl) endEl.value = 'Reopened & Clear';
+      if (descEl) descEl.value = 'Joint slab replacement completed and inspected. All lanes reopened to normal traffic.';
+    }
+  }
+
+  async function submitSimulateNotice(e) {
+    e.preventDefault();
+    if (!state.token) {
+      alert('Please log in with admin account to emit simulated test notices.');
+      return;
+    }
+
+    const payload = {
+      title: document.getElementById('sim-title').value.trim(),
+      roadName: document.getElementById('sim-road').value.trim(),
+      landmark: document.getElementById('sim-landmark').value.trim(),
+      category: document.getElementById('sim-category').value,
+      severity: document.getElementById('sim-severity').value,
+      status: document.getElementById('sim-status').value,
+      expectedEndTime: document.getElementById('sim-end-time').value.trim(),
+      description: document.getElementById('sim-desc').value.trim()
+    };
+
+    try {
+      const res = await fetch('/api/autosync/simulate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to simulate notice.');
+        return;
+      }
+
+      closeModal('modal-test-simulator');
+      alert('Simulated notice emitted! Ingested and reconciled automatically via background engine.');
+      await loadIncidents();
+      await loadAdminData();
+    } catch (err) {
+      alert('Network error while simulating notice.');
+    }
+  }
+
+  async function submitCustomSource(e) {
+    e.preventDefault();
+    if (!state.token) return;
+
+    const payload = {
+      name: document.getElementById('cust-source-name').value.trim(),
+      url: document.getElementById('cust-source-url').value.trim(),
+      category: document.getElementById('cust-source-category').value,
+      intervalMinutes: parseInt(document.getElementById('cust-source-interval').value, 10),
+      trustLevel: document.getElementById('cust-source-trust').value,
+      notes: document.getElementById('cust-source-notes').value.trim()
+    };
+
+    try {
+      const res = await fetch('/api/autosync/source/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to add custom source.');
+        return;
+      }
+
+      closeModal('modal-add-custom-source');
+      alert(`Source "${payload.name}" successfully registered and scheduled!`);
+      await loadAutoSyncData();
+    } catch (err) {
+      alert('Network error registering source.');
+    }
+  }
+
+  // ==================== REAL-TIME SSE INITIALIZATION ====================
+  let eventSource = null;
+  let fallbackPollingHandle = null;
+
+  function initRealtimeSync() {
+    if (typeof EventSource !== 'undefined') {
+      try {
+        if (eventSource) {
+          eventSource.close();
+        }
+
+        eventSource = new EventSource('/api/realtime/stream');
+
+        eventSource.addEventListener('handshake', function(e) {
+          const indicatorDot = document.getElementById('sse-indicator-dot');
+          const indicatorText = document.getElementById('sse-indicator-text');
+          if (indicatorDot) indicatorDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+          if (indicatorText) indicatorText.textContent = 'Auto-Sync Active';
+        });
+
+        eventSource.addEventListener('incident_created', async function(e) {
+          const inc = JSON.parse(e.data);
+          // Auto-sync map, incident list, counters without page refresh
+          await loadIncidents();
+          if (state.currentView === 'admin' && state.user && state.user.role === 'admin') {
+            await loadAdminData();
+          }
+        });
+
+        eventSource.addEventListener('incident_updated', async function(e) {
+          await loadIncidents();
+          if (state.currentView === 'admin' && state.user && state.user.role === 'admin') {
+            await loadAdminData();
+          }
+        });
+
+        eventSource.addEventListener('incident_resolved', async function(e) {
+          await loadIncidents();
+          if (state.currentView === 'admin' && state.user && state.user.role === 'admin') {
+            await loadAdminData();
+          }
+        });
+
+        eventSource.addEventListener('autosync_status', function(e) {
+          const statusData = JSON.parse(e.data);
+          if (state.currentView === 'admin') {
+            renderAutoSyncCentre(statusData);
+          }
+        });
+
+        eventSource.addEventListener('commuter_notification', function(e) {
+          const notif = JSON.parse(e.data);
+          // Check if notification belongs to currently logged-in user
+          if (state.user && state.user.id === notif.userId) {
+            const badge = document.getElementById('notif-badge');
+            if (badge) badge.classList.remove('hidden');
+
+            // Browser Web Push Notification if permission granted
+            if ('Notification' in window && Notification.permission === 'granted') {
+              try {
+                new Notification(notif.title, {
+                  body: notif.message,
+                  icon: './assets/logo.png'
+                });
+              } catch (_) {}
+            }
+          }
+        });
+
+        eventSource.onerror = function() {
+          const indicatorDot = document.getElementById('sse-indicator-dot');
+          const indicatorText = document.getElementById('sse-indicator-text');
+          if (indicatorDot) indicatorDot.className = 'w-2 h-2 rounded-full bg-amber-400';
+          if (indicatorText) indicatorText.textContent = 'Auto-Sync Reconnecting';
+          
+          // Start fallback polling if not already running
+          if (!fallbackPollingHandle) {
+            startFallbackPolling();
+          }
+        };
+
+      } catch (err) {
+        console.warn('SSE failed to open, switching to fallback polling:', err);
+        startFallbackPolling();
+      }
+    } else {
+      startFallbackPolling();
+    }
+  }
+
+  function startFallbackPolling() {
+    if (fallbackPollingHandle) return;
+    fallbackPollingHandle = setInterval(async () => {
+      try {
+        const res = await fetch('/api/realtime/poll?since=' + encodeURIComponent(new Date(Date.now() - 30000).toISOString()));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.events && data.events.length > 0) {
+            await loadIncidents();
+            if (state.currentView === 'admin') await loadAdminData();
+          }
+        }
+      } catch (_) {}
+    }, 15000); // Poll every 15s
   }
 
   async function moderateIncident(incidentId, verificationStatus, newStatus) {
@@ -2013,6 +2448,16 @@
     deleteSavedPlace,
     saveApiSettings,
     loadAdminData,
+    loadAutoSyncData,
+    triggerAutoSyncCheck,
+    triggerSourceCheck,
+    toggleSource,
+    changeSourceInterval,
+    openSimulateModal,
+    openAddSourceModal,
+    fillSimPreset,
+    submitSimulateNotice,
+    submitCustomSource,
     moderateIncident,
     resetDemoData,
     toggleMobileMenu,

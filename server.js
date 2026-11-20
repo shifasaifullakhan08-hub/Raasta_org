@@ -7,6 +7,9 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { connectDB, getDB } = require('./config/db');
+const realtimeSync = require('./services/realtimeSync');
+const { monitorEngine, queueTestNotice } = require('./services/monitorEngine');
+const { validateSafeUrl } = require('./services/ssrfProtection');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -870,11 +873,104 @@ app.post('/api/admin/moderate', authenticateToken, requireAdmin, (req, res) => {
   res.json({ success: true, incident, auditEntry });
 });
 
-// Admin Reset Demo Data
-app.post('/api/admin/reset-demo-data', authenticateToken, requireAdmin, (req, res) => {
-  db.incidents = SEED_INCIDENTS.map(i => ({ ...i }));
-  saveDatabase(db);
-  res.json({ success: true, message: 'Demo Belagavi incidents reset successfully.' });
+// ================= REAL-TIME SSE & AUTO-SYNC ROUTES =================
+
+// 1. Real-Time Server-Sent Events (SSE) Stream
+app.get('/api/realtime/stream', (req, res) => {
+  realtimeSync.handleConnection(req, res);
+});
+
+// Fallback Polling endpoint for environments unable to stream SSE
+app.get('/api/realtime/poll', (req, res) => {
+  const since = req.query.since;
+  const events = realtimeSync.getRecentEvents(since);
+  res.json({
+    events,
+    serverTime: new Date().toISOString(),
+    timezone: 'Asia/Kolkata'
+  });
+});
+
+// 2. Auto-Sync Centre Engine Status & Source Registry
+app.get('/api/autosync/status', (req, res) => {
+  res.json(monitorEngine.getEngineStatus());
+});
+
+// Trigger immediate check across all sources or a specific source
+app.post('/api/autosync/trigger', authenticateToken, requireAdmin, async (req, res) => {
+  const { sourceId } = req.body;
+  if (sourceId) {
+    const result = await monitorEngine.runSourceCheck(sourceId);
+    return res.json({ success: true, result, engine: monitorEngine.getEngineStatus() });
+  }
+
+  // Run all
+  monitorEngine.runAllChecks();
+  res.json({ success: true, message: 'Automated monitoring cycle triggered across all sources.', engine: monitorEngine.getEngineStatus() });
+});
+
+// Toggle source enabled/disabled
+app.post('/api/autosync/source/:id/toggle', authenticateToken, requireAdmin, (req, res) => {
+  const { enabled } = req.body;
+  const result = monitorEngine.toggleSource(req.params.id, enabled);
+  if (!result.success) return res.status(404).json(result);
+  res.json(result);
+});
+
+// Configure checking interval
+app.post('/api/autosync/source/:id/interval', authenticateToken, requireAdmin, (req, res) => {
+  const { intervalMinutes } = req.body;
+  const result = monitorEngine.setSourceInterval(req.params.id, intervalMinutes);
+  if (!result.success) return res.status(404).json(result);
+  res.json(result);
+});
+
+// Add custom source with SSRF verification
+app.post('/api/autosync/source/add', authenticateToken, requireAdmin, async (req, res) => {
+  const { name, url, category, intervalMinutes, trustLevel, notes } = req.body;
+  if (!name || !url) {
+    return res.status(400).json({ error: 'Source name and URL are required.' });
+  }
+
+  // Validate URL to prevent SSRF
+  const validation = await validateSafeUrl(url);
+  if (!validation.safe) {
+    return res.status(400).json({ error: `URL Validation Failed: ${validation.reason}` });
+  }
+
+  const result = monitorEngine.addCustomSource({
+    name,
+    url: validation.parsedUrl,
+    category,
+    intervalMinutes,
+    trustLevel,
+    notes
+  });
+
+  res.json(result);
+});
+
+// Testing Simulator Endpoint: Queue a test notice (roadblock, maintenance, or reopening) for live automated pickup
+app.post('/api/autosync/simulate', authenticateToken, requireAdmin, async (req, res) => {
+  const { title, roadName, landmark, category, description, severity, status, expectedEndTime } = req.body;
+  if (!title || !roadName) {
+    return res.status(400).json({ error: 'Notice title and road name are required.' });
+  }
+
+  queueTestNotice({
+    title,
+    roadName,
+    landmark,
+    category,
+    description: description || 'Simulated civic advisory notice for automated monitoring pipeline testing',
+    severity: severity || 'moderate',
+    status: status || 'active',
+    expectedEndTime: expectedEndTime || 'Tomorrow, 06:00 PM'
+  });
+
+  // Trigger pickup via the simulator source
+  const result = await monitorEngine.runSourceCheck('src-belagavi-test-simulator');
+  res.json({ success: true, message: 'Simulated notice queued and ingested through automated monitoring engine.', result });
 });
 
 // SPA fallback
@@ -889,6 +985,9 @@ app.listen(PORT, async () => {
   console.log(`🌐 Server URL: http://localhost:${PORT}`);
   console.log(`🎨 Theme: Wine Burgundy (#5C0D1D) & Vanilla Cream (#FDF6E5)`);
   console.log(`========================================\n`);
+
+  // Initialize and boot background monitoring engine
+  monitorEngine.init(() => db, (updatedDb) => saveDatabase(updatedDb));
 
   // Connect to MongoDB Atlas
   await connectDB();
